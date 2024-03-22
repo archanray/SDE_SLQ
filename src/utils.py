@@ -2,20 +2,26 @@ import numpy as np
 import pickle
 import os
 
-def sort_abs_descending(x):
+def sort_abs_descending(x, type="values"):
     """
     Sort array by absolute value in descending order.
     """
     abs_x = np.abs(x)
     idx = np.argsort(-abs_x)
-    return x[idx]
+    if type == "values":
+        return x[idx]
+    else:
+        return idx
 
-def sort_descending(x):
+def sort_descending(x, type="values"):
     """
     Sort array in descending order.
     """
     idx = np.argsort(-x)
-    return x[idx]
+    if type == "values":
+        return x[idx]
+    else:
+        return idx
 
 def get_spectrum(input):
     """
