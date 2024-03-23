@@ -43,3 +43,15 @@ def saver(save_dict, name_adder="single_eval_method"):
     with open(file_path, "wb") as f:
         pickle.dump(save_dict, f)
     return None
+
+def ChebyshevPolynomial(x, n):
+    if n == 0:
+        return np.ones_like(x)
+    if n == 1:
+        return x
+    return 2*np.multiply(x, ChebyshevPolynomial(x, n-1)) - ChebyshevPolynomial(x, n-2)
+
+def ChebyshevWrapper(x, n=0, weight=np.pi):
+    return ChebyshevPolynomial(x, n) / weight
+
+# print(ChebyshevPolynomial(list(range(4)), 2).shape)

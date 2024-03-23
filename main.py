@@ -8,12 +8,19 @@ from src.approx_wrapper import SDE
 def main(args):
     data, data_size = get_data(args.dataset)
     true_spectrum_sorted = get_spectrum(data)
+    block_sizes = [x for x in range(10, int(np.sqrt(data_size)), 50)]
     saveData = {"true_spectrum": true_spectrum_sorted, \
                 "dataset": args.dataset, \
                 "trials": args.trials,\
-                "method": args.method}
-    params = {"data_size": data_size, "trials": args.trials, "method": args.method}
-    saveData["spectral_density_estimates"] = SDE(data, params)
+                "method": args.method,\
+                "block_sizes": block_sizes,\
+                "iters": args.iters}
+    params = {"data_size": data_size, \
+                "trials": args.trials, \
+                "method": args.method, \
+                "block_sizes": block_sizes, \
+                "iters": args.iters}
+    saveData["spectral_density_estimates"], saveData["random_seeds"] = SDE(data, params)
     saver(saveData)
     return None
 
@@ -38,12 +45,12 @@ if __name__ == "__main__":
                         default=3, 
                         required=False,
                         help="number of trials to average out performance")
-    parser.add_argument('--block_size', '-b',
-                        dest='block_size', 
-                        type=str, 
-                        default="full", 
+    parser.add_argument('--iters', '-l',
+                        dest='iters', 
+                        type=int, 
+                        default=10, 
                         required=False,
-                        help="block size for ther algos to run on")
+                        help="number of iterations in the estimators")
     args = parser.parse_args()
     print(args)
     main(args)

@@ -1,5 +1,7 @@
 import numpy as np
 from copy import deepcopy
+from src.utils import ChebyshevWrapper
+from src.optimizers import L1Solver
 
 def hutchMomentEstimator(A, N, l):
     """
@@ -22,13 +24,18 @@ def hutchMomentEstimator(A, N, l):
     tau = tau * (np.sqrt(2/np.pi) / l*n)
     return tau
 
-def approxChebMomentMatching(A, N, tau):
+def approxChebMomentMatching(tau, N=40):
     """
     implements algorithm 1 of https://arxiv.org/pdf/2104.03461.pdf
     """
-    assert A == A.T
-    n = len(A)
-    z = np.divide(tau, list(range(1,n+1)))
+    n = len(tau)
+    nIntegers = np.array(list(range(1,n+1)))
+    z = np.divide(tau, nIntegers)
     d = np.ceil(N**3 / 2)
-    
-    return None
+    xs = -1 + (np.array(list(range(1,d+1))) / d) # d values
+    Tkbar = np.zeros((N, d))
+    for i in range(1,N+1):
+        Tkbar[i-1,:] = ChebyshevWrapper(xs, i, weight=np.pi/2)
+    TNd = np.divide(Tkbar, nIntegers)
+    solver = L1Solver(TNd, z)
+    return solver.res.x
