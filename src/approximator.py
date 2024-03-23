@@ -2,6 +2,7 @@ import numpy as np
 from src.block_krylov import block_krylov_iter_oth as bki
 from src.stochastic_lanczos import lanczos
 from src.utils import sort_abs_descending
+from moment_estimator import hutchMomentEstimator
 
 def findMatches(nums, support, indicesTopKMag):
     indices = []
@@ -32,9 +33,16 @@ def slq(A, x, k, l, seed=0):
     # returns a values taken at the support points
     return fx / l
 
-def sde(A, k):
+def sde(A, k, l):
     n = len(A)
-    fx = np.zeros(n)
-    Z, L = bki(A, k, 10)
+    Z, Lambda = bki(A, k, 10)
+
+    P = np.eye(n) - np.dot(Z, Z.T)
+    L = n
+    eps = 0.1
+    N = 10*eps
+    # approximate moments
+    fx = hutchMomentEstimator(np.dot(P, np.dot(A, P))/L, N, l)
+    
     return fx
 

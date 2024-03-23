@@ -1,21 +1,5 @@
 import numpy as np
-
-def recurrance(A, g, idx):
-    if idx == 0:
-        return g
-    if idx == 1:
-        return np.dot(A, g)
-    return 2*A*np.dot(recurrance(A, g, idx-1), g) - np.dot(recurrance(A, g, idx-2), g)
-
-def preComputer(A, G):
-    n = len(A)
-    l = A.shape[1]
-    dict_of_matvecs = {}
-    for i in range(n):
-        for j in range(l):
-            
-        
-    
+from copy import deepcopy
 
 def hutchMomentEstimator(A, N, l):
     """
@@ -25,9 +9,26 @@ def hutchMomentEstimator(A, N, l):
     n = len(A)
     G = np.random.randn((n,l))
     tau = np.zeros(n)
+    TAG0 = deepcopy(G)
     for k in range(N):
-        for idx in range(l):
-            TkG = 
-        
+        tau[k] = np.sum(np.multiply(G, TAG0))
+        if k == 0:
+            TAG1 = np.dot(A, G)
+        else:
+            TAG2 = 2*np.dot(A, TAG1) - TAG0
+            TAG0 = deepcopy(TAG1)
+            TAG1 = deepcopy(TAG2)
+        pass
     tau = tau * (np.sqrt(2/np.pi) / l*n)
+    return tau
+
+def approxChebMomentMatching(A, N, tau):
+    """
+    implements algorithm 1 of https://arxiv.org/pdf/2104.03461.pdf
+    """
+    assert A == A.T
+    n = len(A)
+    z = np.divide(tau, list(range(1,n+1)))
+    d = np.ceil(N**3 / 2)
     
+    return None
