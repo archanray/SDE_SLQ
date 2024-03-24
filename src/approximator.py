@@ -1,10 +1,10 @@
 import numpy as np
 from copy import deepcopy
-from src.block_krylov import block_krylov_iter_oth as bki
+from src.block_krylov import bki
 from src.stochastic_lanczos import lanczos
 from src.utils import sort_abs_descending, ChebyshevWrapper
-from moment_estimator import hutchMomentEstimator, approxChebMomentMatching
-from distribution import Distribution, mergeDistributions
+from src.moment_estimator import hutchMomentEstimator, approxChebMomentMatching
+from src.distribution import Distribution, mergeDistributions
 
 def aggregator(k, n):
     def valCalc(q1, q2):
@@ -23,8 +23,8 @@ def slq(A, k, l, seed=0):
     # set up
     np.random.seed(seed)
     n = len(A)
-    fx = np.zeros(n)
     outputDistro = Distribution()
+    
     # main iteration
     for _ in range(l):
         localDistro = Distribution()
@@ -59,9 +59,17 @@ def bkde(A, k, l, seed=0):
         gx[i] = (n*gx[i] - k*ChebyshevWrapper([0], i+1)) / (n-k)
     gx = approxChebMomentMatching(gx, N=k)
     
-    D1, D2 = Distribution(), Distribution()
+    # INCOMPLETE -- gx needs to be a discrete distribution
+    # we have information of the values at each point. but we dont know the supports
+    
+    # assuming gx is a distribution
+    D2 = Distribution()
+    for key in gx.support.keys():
+        if -1 <= key <= 1:
+            D2.support[key*L] = gx.support[key]
+    
+    D1 = Distribution()
     D1.set_weights(Lambda, np.ones_like(Lambda)/k)
-    D2.set_weights(gx, np.ones_like(fx)/len(gx))
     outputDistro = mergeDistributions(D1, D2, aggregator(k, n))
     return outputDistro
 

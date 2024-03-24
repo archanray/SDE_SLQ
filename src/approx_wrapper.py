@@ -6,11 +6,11 @@ def SDE(A, params):
     """
     wrapper function for all kinds fo SDEs
     """
-    assert A == A.T
+    np.testing.assert_allclose(A, A.T)
     outputs = {}
     outputs["distros"] = {}
     outputs["seeds"] = []
-    methods = {"slq": slq, "krylov": bkde}
+    methods = {"SLQ": slq, "BKDE": bkde}
     
     method = methods[params["method"]]
     for t in tqdm(range(params["trials"])):

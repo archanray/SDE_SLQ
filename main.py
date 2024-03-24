@@ -34,8 +34,8 @@ if __name__ == "__main__":
     parser.add_argument('--method', '-m',
                         dest='method', 
                         type=str, 
-                        default="BlockKrylov", 
-                        choices=["BlockKrylov", "SLQ"],
+                        default="SLQ", 
+                        choices=["BKDE", "SLQ"],
                         required=False, 
                         help="choose matvec method")
     parser.add_argument('--trials', '-t',

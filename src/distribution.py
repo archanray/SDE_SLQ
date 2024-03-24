@@ -12,10 +12,10 @@ class Distribution:
         return None
 
 def mergeDistributions(D1, D2, func=None):
-    keys1 = D1.keys()
-    keys2 = D2.keys()
-    keys = keys1+keys2
+    keys1 = D1.support.keys()
+    keys2 = D2.support.keys()
+    keys = list(keys1)+list(keys2)
     newDistro = Distribution()
     for key in keys:
-        newDistro.support[key] = func(D1.get(key, 0), D2.get(key, 0))
+        newDistro.support[key] = func(D1.support.get(key, 0), D2.support.get(key, 0))
     return newDistro

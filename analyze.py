@@ -4,9 +4,9 @@ from src.display_codes import plotter
 
 def main(args):
     if args.methods == "all":
-        methods = ["SLQ", "BlockKrylov"]
+        methods = ["SLQ", "BKDE"]
     else:
-        methods = args.methods
+        methods = [args.methods]
     errors = {}
     sds = {}
     blocks = {}
@@ -26,9 +26,9 @@ if __name__ == "__main__":
     parser.add_argument('--methods', '-m',
                         dest='methods', 
                         type=str, 
-                        default="all", 
+                        default="SLQ", 
                         required=False,
-                        choices=["SLQ", "BlockKrylov", "all"],
+                        choices=["SLQ", "BKDE", "all"],
                         help="choose methdos to compare here")
     args = parser.parse_args()
     print(args)

@@ -56,9 +56,9 @@ def ChebyshevWrapper(x, n=0, weight=np.pi):
 
 def Wasserstein(D1, D2):
     distance = 0
-    keys = D1.keys() + D2.keys()
+    keys = list(D1.support.keys()) + list(D2.support.keys())
     for key in keys:
-        distance += np.abs(D1.get(key, 0) - D2.get(key, 0))
+        distance += np.abs(D1.support.get(key, 0) - D2.support.get(key, 0))
     return distance
 
 # print(ChebyshevPolynomial(list(range(4)), 2).shape)

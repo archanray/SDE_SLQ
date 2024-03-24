@@ -37,15 +37,15 @@ class L1Solver:
         return None
     
     
-# Example usage
-T = np.array([[2, 1], [2, 1]])
-z = np.array([3, 3])
+# # Example usage
+# T = np.array([[2, 1], [2, 1]])
+# z = np.array([3, 3])
 
-solver = L1Solver(T=T, z=z)
-solver.minimizer()
+# solver = L1Solver(T=T, z=z)
+# solver.minimizer()
 
-print("Optimal q:", solver.res.x)
-print("Optimal value:", solver.MinizeFunc(solver.res.x))
-v = [0.90561836, 0.32527857]#solver.res.x
-v = v / np.linalg.norm(v)
-print("Optimal value:", solver.MinizeFunc(v))
+# print("Optimal q:", solver.res.x)
+# print("Optimal value:", solver.MinizeFunc(solver.res.x))
+# v = [0.90561836, 0.32527857]#solver.res.x
+# v = v / np.linalg.norm(v)
+# print("Optimal value:", solver.MinizeFunc(v))
