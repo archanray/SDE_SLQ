@@ -31,7 +31,7 @@ def get_spectrum(input):
     spectrum = sort_abs_descending(np.real(spectrum))
     return spectrum
 
-def saver(save_dict, name_adder="single_eval_method"):
+def saver(save_dict, name_adder="single_eval_method_"):
     dir_path = os.path.join("outputs", save_dict["dataset"])
     if not os.path.isdir(dir_path):
         os.makedirs(dir_path)
@@ -53,5 +53,12 @@ def ChebyshevPolynomial(x, n):
 
 def ChebyshevWrapper(x, n=0, weight=np.pi):
     return ChebyshevPolynomial(x, n) / weight
+
+def Wasserstein(D1, D2):
+    distance = 0
+    keys = D1.keys() + D2.keys()
+    for key in keys:
+        distance += np.abs(D1.get(key, 0) - D2.get(key, 0))
+    return distance
 
 # print(ChebyshevPolynomial(list(range(4)), 2).shape)

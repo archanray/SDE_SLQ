@@ -1,5 +1,4 @@
 import numpy as np
-import os
 import argparse
 from src.get_dataset import get_data
 from src.utils import get_spectrum, saver
