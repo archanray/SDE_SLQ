@@ -3,7 +3,7 @@ from copy import deepcopy
 
 def lanczos(A, v, k):
     """
-    implements stochastic lanczos algorithm to return T and not the Q vectors
+    implements lanczos algorithm to return T and not the Q vectors
     
     check page 41 of:
     Golub, G.H. and Meurant, G., 2009. Matrices, moments and quadrature with applications (Vol. 30). Princeton University Press.
@@ -34,4 +34,4 @@ def lanczos(A, v, k):
         
     #     print("alpha, eta:", alpha, eta)
     # print("*******************************EOL**************************************************")
-    return T
+    return

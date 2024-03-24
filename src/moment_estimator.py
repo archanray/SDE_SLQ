@@ -38,4 +38,4 @@ def approxChebMomentMatching(tau, N=40):
         Tkbar[i-1,:] = ChebyshevWrapper(xs, i, weight=np.pi/2)
     TNd = np.divide(Tkbar, nIntegers)
     solver = L1Solver(TNd, z)
-    return solver.res.x
+    return xs, solver.res.x

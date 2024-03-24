@@ -1,8 +1,8 @@
 import numpy as np
 from copy import deepcopy
 from src.block_krylov import bki
-from src.stochastic_lanczos import lanczos
-from src.utils import sort_abs_descending, ChebyshevWrapper
+from lanczos import lanczos
+from src.utils import ChebyshevWrapper
 from src.moment_estimator import hutchMomentEstimator, approxChebMomentMatching
 from src.distribution import Distribution, mergeDistributions
 
@@ -57,16 +57,14 @@ def bkde(A, k, l, seed=0):
     gx = deepcopy(fx)
     for i in range(len(gx)):
         gx[i] = (n*gx[i] - k*ChebyshevWrapper([0], i+1)) / (n-k)
-    gx = approxChebMomentMatching(gx, N=k)
-    
-    # INCOMPLETE -- gx needs to be a discrete distribution
-    # we have information of the values at each point. but we dont know the supports
+    supports, gx = approxChebMomentMatching(gx, N=k)
     
     # assuming gx is a distribution
     D2 = Distribution()
-    for key in gx.support.keys():
+    for i in range(len(supports)):
+        key = supports[i]
         if -1 <= key <= 1:
-            D2.support[key*L] = gx.support[key]
+            D2.support[key*L] = gx[i]
     
     D1 = Distribution()
     D1.set_weights(Lambda, np.ones_like(Lambda)/k)
