@@ -29,8 +29,9 @@ def summarizer(dataset, method, name_adder="single_eval_method_"):
     print(errors)
     # set axis 0 to compte means and standard deviations along the rows
     logMeanError = np.log(np.mean(errors, axis=0) + eps)
-    logSDs = np.log(np.std(errors, axis=0) + eps)
+    logp20s = np.log(np.percentile(errors, q=20, axis=0) + eps)
+    logp80s = np.log(np.percentile(errors, q=80, axis=0) + eps)
     logBlockSizeProportionals = np.log(np.array(load_vals["block_sizes"]) / len(inputSupports))
     
     # print(logMeanError)
-    return logMeanError, logSDs, logBlockSizeProportionals
+    return logMeanError, logp20s, logp80s, logBlockSizeProportionals

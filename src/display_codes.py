@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import os
 
-def plotter(errors, standard_deviations, blocks, methods, dataset):
+def plotter(errors, percentiles_lo, percentiles_hi, blocks, methods, dataset):
     plt.rcParams.update({'font.size': 13})
     
     label_names = {"SLQ": "SLQ", "BKDE": "Krylov deflation + SDE"}
@@ -9,8 +9,8 @@ def plotter(errors, standard_deviations, blocks, methods, dataset):
     for m in methods:
         plt.plot(blocks[m], errors[m], label = label_names[m])
         plt.fill_between(blocks[m], \
-                        errors[m] - standard_deviations[m],  \
-                        errors[m] + standard_deviations[m], alpha=0.2)
+                        percentiles_lo[m],  \
+                        percentiles_hi[m], alpha=0.2)
     plt.legend()
     plt.xlabel("Block size as log proportion of dataset")
     plt.ylabel("Wasserstein error of SDE")

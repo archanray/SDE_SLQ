@@ -8,11 +8,12 @@ def main(args):
     else:
         methods = [args.methods]
     errors = {}
-    sds = {}
+    p20s = {}
+    p80s = {}
     blocks = {}
     for m in methods:
-        errors[m], sds[m], blocks[m] = summarizer(args.dataset, m)
-    plotter(errors, sds, blocks, methods, args.dataset)
+        errors[m], p20s[m], p80s[m], blocks[m] = summarizer(args.dataset, m)
+    plotter(errors, p20s, p80s, blocks, methods, args.dataset)
     return None
 
 if __name__ == "__main__":
