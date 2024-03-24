@@ -4,7 +4,7 @@ from src.display_codes import plotter
 
 def main(args):
     if args.methods == "all":
-        methods = ["slq", "kd"]
+        methods = ["SLQ", "BlockKrylov"]
     else:
         methods = args.methods
     errors = {}
@@ -28,6 +28,7 @@ if __name__ == "__main__":
                         type=str, 
                         default="all", 
                         required=False,
+                        choices=["SLQ", "BlockKrylov", "all"],
                         help="choose methdos to compare here")
     args = parser.parse_args()
     print(args)
