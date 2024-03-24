@@ -2,6 +2,7 @@ import numpy as np
 from copy import deepcopy
 from src.utils import ChebyshevWrapper
 from src.optimizers import L1Solver
+from tqdm import tqdm
 
 def hutchMomentEstimator(A, N, l):
     """
@@ -9,7 +10,7 @@ def hutchMomentEstimator(A, N, l):
     """
     np.testing.assert_allclose(A, A.T)
     n = len(A)
-    G = np.random.randn((n,l))
+    G = np.random.normal(0, 1/np.sqrt(l), (n,l))
     tau = np.zeros(n)
     TAG0 = deepcopy(G)
     for k in range(N):
@@ -34,8 +35,9 @@ def approxChebMomentMatching(tau, N=40):
     d = np.ceil(N**3 / 2)
     xs = -1 + (np.array(list(range(1,d+1))) / d) # d values
     Tkbar = np.zeros((N, d))
-    for i in range(1,N+1):
+    for i in tqdm(range(1,N+1)):
         Tkbar[i-1,:] = ChebyshevWrapper(xs, i, weight=np.pi/2)
     TNd = np.divide(Tkbar, nIntegers)
+    print("here")
     solver = L1Solver(TNd, z)
     return xs, solver.res.x

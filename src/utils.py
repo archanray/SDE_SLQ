@@ -52,7 +52,7 @@ def ChebyshevPolynomial(x, n):
     return 2*np.multiply(x, ChebyshevPolynomial(x, n-1)) - ChebyshevPolynomial(x, n-2)
 
 def ChebyshevWrapper(x, n=0, weight=np.pi):
-    return ChebyshevPolynomial(x, n) / weight
+    return np.array(ChebyshevPolynomial(x, n)) / weight
 
 def Wasserstein(D1, D2):
     from scipy.stats import wasserstein_distance as distFun

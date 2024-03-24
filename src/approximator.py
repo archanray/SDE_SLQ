@@ -1,10 +1,11 @@
 import numpy as np
 from copy import deepcopy
 from src.block_krylov import bki
-from lanczos import lanczos
+from src.lanczos import lanczos
 from src.utils import ChebyshevWrapper
 from src.moment_estimator import hutchMomentEstimator, approxChebMomentMatching
 from src.distribution import Distribution, mergeDistributions
+from tqdm import tqdm
 
 def aggregator(k, n):
     def valCalc(q1, q2):
@@ -55,7 +56,7 @@ def bkde(A, k, l, seed=0):
     # approximate moments
     fx = hutchMomentEstimator(np.dot(P, np.dot(A, P))/L, k, l)
     gx = deepcopy(fx)
-    for i in range(len(gx)):
+    for i in tqdm(range(len(gx))):
         gx[i] = (n*gx[i] - k*ChebyshevWrapper([0], i+1)) / (n-k)
     supports, gx = approxChebMomentMatching(gx, N=k)
     

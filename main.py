@@ -34,7 +34,7 @@ if __name__ == "__main__":
     parser.add_argument('--method', '-m',
                         dest='method', 
                         type=str, 
-                        default="SLQ", 
+                        default="BKDE", 
                         choices=["BKDE", "SLQ"],
                         required=False, 
                         help="choose matvec method")
