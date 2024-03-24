@@ -10,7 +10,7 @@ def plotter(errors, standard_deviations, blocks, methods, dataset):
         plt.plot(blocks[m], errors[m], label = label_names[m])
         plt.fill_between(blocks[m], \
                         errors[m] - standard_deviations[m],  \
-                        errors[m] + standard_deviations[m])
+                        errors[m] + standard_deviations[m], alpha=0.2)
     plt.legend()
     plt.xlabel("Block size as log proportion of dataset")
     plt.ylabel("Wasserstein error of SDE")
