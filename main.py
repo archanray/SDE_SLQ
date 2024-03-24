@@ -41,7 +41,7 @@ if __name__ == "__main__":
     parser.add_argument('--trials', '-t',
                         dest='trials', 
                         type=int, 
-                        default=3, 
+                        default=5, 
                         required=False,
                         help="number of trials to average out performance")
     parser.add_argument('--iters', '-l',

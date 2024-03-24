@@ -13,7 +13,7 @@ def get_data(name):
             """
             symmetric matrix with random entries
             """
-            dataset_size = 5000
+            dataset_size = 500
             data = np.random.random((dataset_size, dataset_size))
             data = (data.T + data) / 2 # set all elements to [-1, 1]
             with open(file_path, "w") as f:

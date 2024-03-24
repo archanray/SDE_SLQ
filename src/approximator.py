@@ -14,11 +14,12 @@ def aggregator(k, n):
 def adder(l):
     def valCal(v1, v2):
         return v1+(v2/l)
-    return adder
+    return valCal
 
-def slq(A, k, l, seed=0):
-    # THERE IS A BUG AS IN THERE SHOULDN'T BE AN X HERE. 
-    # need to define supports correctly
+def slq(A, k, l, seed=0): 
+    """
+    implements sde using stochastic Lanczos quadrature
+    """
     # set up
     np.random.seed(seed)
     n = len(A)
@@ -41,9 +42,9 @@ def slq(A, k, l, seed=0):
     # returns a distribution
     return outputDistro
 
-def kd(A, k, l, seed=0):
+def bkde(A, k, l, seed=0):
     """
-    sde using block krylov deflation and SDE of BKM22
+    implements sde using block krylov deflation and SDE of BKM22
     """
     np.random.seed(seed)
     n = len(A)
@@ -59,7 +60,7 @@ def kd(A, k, l, seed=0):
     gx = approxChebMomentMatching(gx, N=k)
     
     D1, D2 = Distribution(), Distribution()
-    D1.set_weights(fx, np.ones_like(fx)/len(fx))
+    D1.set_weights(Lambda, np.ones_like(Lambda)/k)
     D2.set_weights(gx, np.ones_like(fx)/len(gx))
     outputDistro = mergeDistributions(D1, D2, aggregator(k, n))
     return outputDistro

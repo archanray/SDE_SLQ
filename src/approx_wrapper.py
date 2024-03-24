@@ -1,6 +1,6 @@
 import numpy as np
 from tqdm import tqdm
-from src.approximator import slq, kd
+from src.approximator import slq, bkde
 
 def SDE(A, params):
     """
@@ -10,8 +10,7 @@ def SDE(A, params):
     outputs = {}
     outputs["distros"] = {}
     outputs["seeds"] = []
-    # outputs = np.zeros((params["trials"], len(A)))
-    methods = {"slq": slq, "krylov": kd}
+    methods = {"slq": slq, "krylov": bkde}
     
     method = methods[params["method"]]
     for t in tqdm(range(params["trials"])):
@@ -21,5 +20,5 @@ def SDE(A, params):
         ks = params["block_sizes"]
         l = params["iters"]
         for k in ks:
-            outputs["distros"][str(t)+","+str(k)] = method(A, k, l)
+            outputs["distros"][str(t)+","+str(k)] = method(A, k, l, seed=seed)
     return outputs["distros"], outputs["seeds"]
