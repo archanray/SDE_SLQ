@@ -7,7 +7,7 @@ from src.approx_wrapper import SDE
 def main(args):
     data, data_size = get_data(args.dataset)
     true_spectrum_sorted = get_spectrum(data)
-    block_sizes = [x for x in range(10, int(np.sqrt(data_size)), 50)]
+    block_sizes = [x for x in range(10, int(data_size/2), 50)]
     saveData = {"true_spectrum": true_spectrum_sorted, \
                 "dataset": args.dataset, \
                 "trials": args.trials,\
