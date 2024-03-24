@@ -7,7 +7,6 @@ from src.utils import Wasserstein
 
 def summarizer(dataset, method, name_adder="single_eval_method_"):
     file_to_read = os.path.join("outputs", dataset, name_adder+method+".pkl")
-    print(file_to_read)
     if not os.path.exists(file_to_read):
         print("the main.py for this method or dataset hasn't been executed")
         sys.exit(1)
