@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import os
 
 def plotter(errors, standard_deviations, blocks, methods, dataset):
-    plt.rcParams.update({'font.size': 15})
+    plt.rcParams.update({'font.size': 13})
     
     label_names = {"SLQ": "SLQ", "BKDE": "Krylov deflation + SDE"}
     
