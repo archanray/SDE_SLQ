@@ -55,10 +55,12 @@ def ChebyshevWrapper(x, n=0, weight=np.pi):
     return ChebyshevPolynomial(x, n) / weight
 
 def Wasserstein(D1, D2):
-    distance = 0
-    keys = list(D1.support.keys()) + list(D2.support.keys())
-    for key in keys:
-        distance += np.abs(D1.support.get(key, 0) - D2.support.get(key, 0))
+    from scipy.stats import wasserstein_distance as distFun
+    keys1 = list(D1.support.keys())
+    values1 = list(D1.support.values())
+    keys2 = list(D2.support.keys())
+    values2 = list(D2.support.values())
+    distance = distFun(keys1, keys2, values1, values2)
     return distance
 
 # print(ChebyshevPolynomial(list(range(4)), 2).shape)

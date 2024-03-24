@@ -26,7 +26,7 @@ def summarizer(dataset, method, name_adder="single_eval_method_"):
     for t in ts:
         for j in range(len(ks)):
             errors[t,j] = Wasserstein(inputDistro, load_vals["spectral_density_estimates"][str(t)+","+str(ks[j])])
-    # print(errors.shape)
+    print(errors)
     # set axis 0 to compte means and standard deviations along the rows
     logMeanError = np.log(np.mean(errors, axis=0) + eps)
     logSDs = np.log(np.std(errors, axis=0) + eps)
