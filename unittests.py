@@ -28,7 +28,7 @@ class TestCalculations(unittest.TestCase):
         trials = 10
         eps = 1e-25
         n = 200
-        ks = np.array(list(range(10, n, 10)))
+        ks = np.array(list(range(10, n+10, 10)))
         error1 = np.zeros((trials, len(ks)))
         error2 = np.zeros((trials, len(ks)))
         
