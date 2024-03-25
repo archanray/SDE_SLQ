@@ -54,6 +54,17 @@ def ChebyshevPolynomial(x, n):
 def ChebyshevWrapper(x, n=0, weight=np.pi):
     return np.array(ChebyshevPolynomial(x, n)) / weight
 
+def normalizedChebyPolyFixedPoint(x, k):
+    res = np.zeros(k+1)
+    for i in range(k+1):
+        if i == 0:
+            res[i] = 1
+        elif i == 1:
+            res[i] = x
+        else:
+            res[i] = 2*x*res[i-1] - res[i-2]
+    return 2*res[1:] / np.pi
+
 def Wasserstein(D1, D2):
     from scipy.stats import wasserstein_distance as distFun
     keys1 = list(D1.support.keys())

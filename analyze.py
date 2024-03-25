@@ -27,7 +27,7 @@ if __name__ == "__main__":
     parser.add_argument('--methods', '-m',
                         dest='methods', 
                         type=str, 
-                        default="SLQ", 
+                        default="all", 
                         required=False,
                         choices=["SLQ", "BKDE", "all"],
                         help="choose methdos to compare here")

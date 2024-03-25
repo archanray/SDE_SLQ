@@ -1,7 +1,7 @@
 import numpy as np
 from copy import deepcopy
 
-def lanczos(A, v, k, return_type="T"):
+def naive_lanczos(A, v, k, return_type="T"):
     """
     implements lanczos algorithm to return T and not the Q vectors
     
@@ -17,8 +17,8 @@ def lanczos(A, v, k, return_type="T"):
     
     # set up
     Q[:,0] = v / np.linalg.norm(v)
-    alpha = np.dot(Q.T, np.dot(A, Q))
-    Q_tilde = np.dot(A, Q) - alpha*Q
+    alpha = np.dot(Q[:,0].T, np.dot(A, Q[:,0]))
+    Q_tilde = np.dot(A, Q[:,0]) - alpha*Q[:,0]
     # orthogonalize Q_tilde
     Q_tilde = Q_tilde - np.dot(np.dot(Q, Q.T), Q_tilde)
     T[0,0] = alpha
@@ -26,18 +26,17 @@ def lanczos(A, v, k, return_type="T"):
     # iteration
     for i in range(1,k):
         eta = np.linalg.norm(Q_tilde)
-        # note there is a modification in the following line for local orthogonalization 
         Q[:,i] = Q_tilde / eta
-        alpha = 
-        Q_tilde = (np.dot(A, Q_tilde / eta)) - (alpha / eta)*Q_tilde - eta*Q
-        Q = Q_tilde / eta
+        AQi = np.dot(A, Q[:,i])
+        # modification for finite precision stability
+        alpha = np.dot(Q[:,i].T, AQi) - eta*np.dot(Q[:,i].T, Q[:,i-1])
+        Q_tilde = AQi - alpha*Q[:,i] - eta**Q[:,i-1]
+        # adding the following line for local orthogonalization 
+        Q_tilde = Q_tilde - np.dot(np.dot(Q, Q.T), Q_tilde)
         
         # Set variable
         T[i,i] = alpha
         T[i, i-1] = T[i-1, i] = eta
-
-        if return_type == "Q" or return_type == "QT":
-            approx_eigvecs[:, i] = Q
         
     if return_type == "T":
         return T
@@ -45,52 +44,41 @@ def lanczos(A, v, k, return_type="T"):
         return Q
     else:
         return Q, T
-    
-def exact_lanczos(A,q0,k,reorth=True, return_type="QT"):
+
+def modified_lanczos(A, v, k, return_type="T"):
     """
-    run Lanczos with reorthogonalization
-    
-    Input
-    -----
-    A : entries of diagonal matrix A
-    q0 : starting vector
-    k : number of iterations
-    B : entries of diagonal weights for orthogonalization
+    implements lanczos algorithm from https://arxiv.org/pdf/2105.06595.pdf
     """
+    # init variables
+    n = len(A)
+    T = np.zeros((k,k))
+    Q = np.zeros((n,k))
     
-    n = len(q0)
+    # set up
+    beta = 0
+    Q[:,0] = v / np.linalg.norm(v)
     
-    Q = np.zeros((n,k),dtype=A.dtype)
-    a = np.zeros(k,dtype=A.dtype)
-    b = np.zeros(k-1,dtype=A.dtype)
-    
-    if return_type == "QT":
-        T = np.zeros((k,k))
-    
-    Q[:,0] = q0 / np.sqrt(q0.T@q0)
-    
-    for i in range(1,k+1):
-        # expand Krylov space
-        qi = A@Q[:,i-1] - b[i-2]*Q[:,i-2] if i>1 else A@Q[:,i-1]
+    for i in range(k):
+        if i == 0:
+            Qtilde = np.dot(A, Q[:,i])
+        else:
+            Qtilde = np.dot(A, Q[:,i]) - beta*Q[:,i-1]
+        alpha = np.dot(Qtilde.T, Q[:,i])
+        T[i,i] = alpha
+        Qtilde = Qtilde - alpha*Q[:,i]
+        # reorthogonalization
+        Qtilde = Qtilde - np.dot(np.dot(Q,Q.T), Qtilde)
+        beta = np.linalg.norm(Qtilde)
         
-        a[i-1] = qi.T@Q[:,i-1]
-        qi -= a[i-1]*Q[:,i-1]
+        if i >= 1:
+            T[i,i-1] = T[i-1,i] = beta
         
-        if return_type == "QT":
-            T[i-1,i-1] = a[i-1]
-        
-        if reorth:
-            qi -= Q@(Q.T@qi) # regular GS
-            #for j in range(i-1): # modified GS (a bit too slow)
-            #    qi -= (qi.T@Q[:,j])*Q[:,j]
-            
-        if i < k:
-            b[i-1] = np.sqrt(qi.T@qi)
-            Q[:,i] = qi / b[i-1]
-            
-            if return_type == "QT":
-                T[i-1,i] = T[i,i-1] = b[i-1]
-    if return_type == "QT":            
-        return Q, T
-    else:
+        if i < k-1:
+            Q[:,i+1] = Qtilde /beta
+    
+    if return_type == "T":
+        return T
+    elif return_type == "Q":
         return Q
+    else:
+        return Q, T

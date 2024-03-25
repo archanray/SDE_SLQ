@@ -1,7 +1,7 @@
 import numpy as np
 from copy import deepcopy
-from src.utils import ChebyshevWrapper
-from src.optimizers import L1Solver
+from src.utils import normalizedChebyPolyFixedPoint
+from src.optimizers import L1Solver, linprogL1Solver
 from tqdm import tqdm
 
 def hutchMomentEstimator(A, N, l):
@@ -11,8 +11,9 @@ def hutchMomentEstimator(A, N, l):
     np.testing.assert_allclose(A, A.T)
     n = len(A)
     G = np.random.normal(0, 1/np.sqrt(l), (n,l))
-    tau = np.zeros(n)
+    tau = np.zeros(N)
     TAG0 = deepcopy(G)
+    # run the chebyshev series below
     for k in range(N):
         tau[k] = np.sum(np.multiply(G, TAG0))
         if k == 0:
@@ -25,19 +26,21 @@ def hutchMomentEstimator(A, N, l):
     tau = tau * (np.sqrt(2/np.pi) / l*n)
     return tau
 
-def approxChebMomentMatching(tau, N=40):
+def approxChebMomentMatching(tau):
     """
     implements algorithm 1 of https://arxiv.org/pdf/2104.03461.pdf
     """
-    n = len(tau)
-    nIntegers = np.array(list(range(1,n+1)))
+    N = len(tau)
+    nIntegers = np.array(list(range(1,N+1)))
     z = np.divide(tau, nIntegers)
-    d = np.ceil(N**3 / 2)
-    xs = -1 + (np.array(list(range(1,d+1))) / d) # d values
+    d = int(np.ceil(N**2 / 2))
+    xs = -1.0 + (2*np.array(list(range(1,d+1)), dtype=tau.dtype) / d)
     Tkbar = np.zeros((N, d))
-    for i in tqdm(range(1,N+1)):
-        Tkbar[i-1,:] = ChebyshevWrapper(xs, i, weight=np.pi/2)
-    TNd = np.divide(Tkbar, nIntegers)
-    print("here")
+    for i in range(d):
+        Tkbar[:, i] = normalizedChebyPolyFixedPoint(xs[i], N)
+    print("cheby done")
+    TNd = np.divide(Tkbar, nIntegers.reshape(-1,1))
     solver = L1Solver(TNd, z)
+    solver.minimizer()
+    print("L1 solved", solver.res.x.shape)
     return xs, solver.res.x

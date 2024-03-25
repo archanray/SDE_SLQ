@@ -26,11 +26,11 @@ def summarizer(dataset, method, name_adder="single_eval_method_"):
     for t in ts:
         for j in range(len(ks)):
             errors[t,j] = Wasserstein(inputDistro, load_vals["spectral_density_estimates"][str(t)+","+str(ks[j])])
-    print(errors)
+    # print(errors)
     # set axis 0 to compte means and standard deviations along the rows
-    logMeanError = np.log(np.mean(errors, axis=0) + eps)
-    logp20s = np.log(np.percentile(errors, q=20, axis=0) + eps)
-    logp80s = np.log(np.percentile(errors, q=80, axis=0) + eps)
+    logMeanError = np.mean(np.log(errors + eps), axis=0)
+    logp20s = np.percentile(np.log(errors + eps), q=20, axis=0)
+    logp80s = np.percentile(np.log(errors + eps), q=80, axis=0)
     logBlockSizeProportionals = np.log(np.array(load_vals["block_sizes"]) / len(inputSupports))
     
     # print(logMeanError)

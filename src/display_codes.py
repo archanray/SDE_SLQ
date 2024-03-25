@@ -27,5 +27,5 @@ def plotter(errors, percentiles_lo, percentiles_hi, blocks, methods, dataset):
             methods_names += "_"+m
     
     saveFile = os.path.join(saveDestination, methods_names+".pdf")
-    plt.savefig(saveFile)
+    plt.savefig(saveFile, bbox_inches='tight',dpi=200)
     return None

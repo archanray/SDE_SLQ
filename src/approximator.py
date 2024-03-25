@@ -1,8 +1,8 @@
 import numpy as np
 from copy import deepcopy
 from src.block_krylov import bki
-from src.lanczos import lanczos
-from src.utils import ChebyshevWrapper
+from src.lanczos import modified_lanczos as lanczos
+from src.utils import normalizedChebyPolyFixedPoint
 from src.moment_estimator import hutchMomentEstimator, approxChebMomentMatching
 from src.distribution import Distribution, mergeDistributions
 from tqdm import tqdm
@@ -55,10 +55,8 @@ def bkde(A, k, l, seed=0):
     L = n
     # approximate moments
     fx = hutchMomentEstimator(np.dot(P, np.dot(A, P))/L, k, l)
-    gx = deepcopy(fx)
-    for i in tqdm(range(len(gx))):
-        gx[i] = (n*gx[i] - k*ChebyshevWrapper([0], i+1)) / (n-k)
-    supports, gx = approxChebMomentMatching(gx, N=k)
+    fx = (n / (n-k)) * fx - (k / (n-k)) * normalizedChebyPolyFixedPoint(0, len(fx))
+    supports, gx = approxChebMomentMatching(fx)
     
     # assuming gx is a distribution
     D2 = Distribution()
