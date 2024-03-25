@@ -38,8 +38,8 @@ class TestCalculations(unittest.TestCase):
             for k in range(len(ks)):
                 Q1, T1 = naive_lanczos(A, v, ks[k], return_type="QT")
                 Q2, T2 = modified_lanczos(A, v, ks[k], return_type="QT")
-                error1[i, k] = np.log((np.linalg.norm(Q1@T1@Q1.T - A) / n) + eps)
-                error2[i, k] = np.log((np.linalg.norm(Q2@T2@Q2.T - A) / n) + eps)
+                error1[i, k] = np.log((np.linalg.norm(Q1@T1@Q1.T - A) / np.linalg.norm(A, ord=2)) + eps)
+                error2[i, k] = np.log((np.linalg.norm(Q2@T2@Q2.T - A) / np.linalg.norm(A, ord=2)) + eps)
         meanError1 = np.mean(error1, axis=0)
         meanError2 = np.mean(error2, axis=0)
         p20Error1 = np.percentile(error1, q=20, axis=0)
