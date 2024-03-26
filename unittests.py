@@ -19,7 +19,8 @@ class TestCalculations:
         D2 = Distribution(v2, p2)
         D1.showDistribution()
         D2.showDistribution()
-        print("Wasserstein between the two distributions:", Wasserstein(D1, D2))
+        print("Wasserstein between the two distributions (shouldn't be 0):", Wasserstein(D1, D2))
+        print("Wasserstein between the two distributions (should be 0) :", Wasserstein(D1, D1))
         return None
     def checkL1optimizer(self):
         N = 50
@@ -144,4 +145,4 @@ class TestCalculations:
         
 
 if __name__ == '__main__':
-    TestCalculations().test_lanczos()
+    TestCalculations().checkWasserstein()
