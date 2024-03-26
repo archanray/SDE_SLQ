@@ -10,6 +10,17 @@ from src.distribution import Distribution
 from src.optimizers import cvxpyL1Solver, L1Solver, pulpL1solver
 
 class TestCalculations:
+    def checkWasserstein(self):
+        v1 = [0, 1, 3]
+        p1 = [0.5, 0.4, 0.1]
+        v2 = [5, 9, 2]
+        p2 = [0.3, 0.3, 0.4]
+        D1 = Distribution(v1, p1)
+        D2 = Distribution(v2, p2)
+        D1.showDistribution()
+        D2.showDistribution()
+        print("Wasserstein between the two distributions:", Wasserstein(D1, D2))
+        return None
     def checkL1optimizer(self):
         N = 50
         d = 10000 #int(N**3/ 2)
@@ -85,7 +96,7 @@ class TestCalculations:
         
     def testMomentMatchings(self):
         Ns = np.array(list(range(10,100,10)))
-        trials = 10
+        trials = 4
         errors = np.zeros((trials, len(Ns)))
         
         for i in range(trials):
@@ -94,9 +105,7 @@ class TestCalculations:
                 tau = tau / np.sum(tau)
                 support_tau = np.array(list(range(Ns[j])))
                 support_q, q = approxChebMomentMatching(tau)
-                D1, D2 = Distribution(), Distribution()
-                D1.set_weights(support_tau, tau)
-                D2.set_weights(support_q, q)
+                D1, D2 = Distribution(support_tau, tau), Distribution(support_q, q)
                 errors[i,j] = Wasserstein(D1, D2)
         meanErrors = np.mean(errors, axis=0)
         pc20Errors = np.percentile(errors, q=20, axis=0)
@@ -110,8 +119,29 @@ class TestCalculations:
                        ylabel="W1 distance",
                        label1="ChebMM",
                        filename="compare_MM")
+    
+    def visualizeDistributions(self):
+        N = 20
+        tau = np.random.rand(N)
+        tau = tau / np.sum(tau)
+        support_tau = np.array(list(range(N)))
+        support_tau = -1 + (1-(-1)) * (support_tau - support_tau[0]) / (support_tau[-1] - support_tau[0])
+        support_q, q = approxChebMomentMatching(tau)
+        
+        D1, D2 = Distribution(support_tau, tau), Distribution(support_q, q)
+        print("Wasserstein error:", Wasserstein(D1, D2))
+        
+        plt.plot(support_tau, tau, label="input distribution")
+        plt.plot(support_q, q, label="output distribution")
+        plt.legend()
+        plt.title("comparing distributions")
+        savedir = os.path.join("figures", "unittests")
+        if not os.path.isdir(savedir):
+            os.makedirs(savedir)
+        savefilepath = os.path.join(savedir, "chebMM_distribution_visualize.pdf")
+        plt.savefig(savefilepath, bbox_inches='tight',dpi=200)
         
         
 
 if __name__ == '__main__':
-    TestCalculations().testMomentMatchings()
+    TestCalculations().test_lanczos()

@@ -1,18 +1,26 @@
 import numpy as np
 
 class Distribution:
-    def __init__(self, support={}):
-        self.support = support
+    def __init__(self, supports=None, weights=None):
+        self.support = {}
+        if supports is not None:
+            self.set_weights(supports, weights)
         return None
     
     def set_weights(self, supports, weights):
         assert len(supports) == len(weights)
-        # assert np.all(weights > 0)
         
         weights = weights / np.sum(weights)
         
         for i in range(len(supports)):
             self.support[supports[i]] = weights[i]
+        return None
+    
+    def showDistribution(self):
+        """
+        prints the distribution
+        """
+        print(self.support)
         return None
 
 def mergeDistributions(D1, D2, func=None):

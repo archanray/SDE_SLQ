@@ -14,10 +14,9 @@ def summarizer(dataset, method, name_adder="single_eval_method_"):
         load_vals = pickle.load(f)
     
     eps = 1e-20
-    inputDistro = Distribution()
     inputSupports = load_vals["true_spectrum"]
     inputWeights = np.ones_like(inputSupports) / len(inputSupports)
-    inputDistro.set_weights(inputSupports, inputWeights)
+    inputDistro = Distribution(inputSupports, inputWeights)
     
     ts = list(range(load_vals["trials"]))
     ks = load_vals["block_sizes"]

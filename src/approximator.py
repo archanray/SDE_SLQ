@@ -28,15 +28,13 @@ def slq(A, k, l, seed=0):
     
     # main iteration
     for _ in range(l):
-        localDistro = Distribution()
-        
         g = np.random.randn(n)
         g = g / np.linalg.norm(g)
         T = lanczos(A, g, k) # T is a kxk matrix
         
         L, V = np.linalg.eig(T)
         weights = np.square(V[0,:]) / k # dividing by k to have the values normalized
-        localDistro.set_weights(L, weights)
+        localDistro = Distribution(L, weights)
         
         outputDistro = mergeDistributions(outputDistro, localDistro, func=adder(l))
 
@@ -59,14 +57,16 @@ def bkde(A, k, l, seed=0):
     supports, gx = approxChebMomentMatching(fx)
     
     # assuming gx is a distribution
-    D2 = Distribution()
+    new_supports = []
+    new_ps = []
     for i in range(len(supports)):
         key = supports[i]
         if -1 <= key <= 1:
-            D2.support[key*L] = gx[i]
+            new_supports.append(key*L)
+            new_ps.append(gx[i])
+    D2 = Distribution(np.array(new_supports), np.array(new_ps))
     
-    D1 = Distribution()
-    D1.set_weights(Lambda, np.ones_like(Lambda)/k)
+    D1 = Distribution(Lambda, np.ones_like(Lambda)/k)
     outputDistro = mergeDistributions(D1, D2, aggregator(k, n))
     return outputDistro
 
