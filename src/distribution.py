@@ -7,6 +7,10 @@ class Distribution:
     
     def set_weights(self, supports, weights):
         assert len(supports) == len(weights)
+        # assert np.all(weights > 0)
+        
+        weights = weights / np.sum(weights)
+        
         for i in range(len(supports)):
             self.support[supports[i]] = weights[i]
         return None

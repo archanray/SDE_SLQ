@@ -6,6 +6,7 @@
 3. Numpy
 4. tqdm
 5. pickle
+6. cvxpy
 
 ## Entry points:
 1. run `main.py` -- check options in the file to choose from. This code runs the estimators and saves the results in the folder outputs

@@ -1,6 +1,8 @@
 from scipy.optimize import minimize
-from scipy.optimize import linprog
 import numpy as np
+import cvxpy as cp
+from scipy.optimize import linprog
+import pulp
 
 class L1Solver:
     def __init__(self, T=None, z=None, res=None):
@@ -15,12 +17,6 @@ class L1Solver:
         """
         return np.linalg.norm(np.dot(self.T, q) - self.z, ord=1)
     
-    def unitNormConstraint(self, x):
-        """
-        return x^Tx - 1
-        """
-        return np.linalg.norm(x) - 1
-        
     def minimizer(self):
         """
         Inputs: 
@@ -30,73 +26,91 @@ class L1Solver:
             q: n sized vector
         Solves:
             min_q \|Tq - z\|_1 s.t. \|q\|_1 and q_i >= 0
+        this is slow too!
         """
         q = np.ones(self.T.shape[-1])
-        cons = ({"type": "eq", "fun": lambda x: np.linalg.norm(x)-1})
+        cons = ({"type": "eq", "fun": lambda x: np.sum(x)-1})
         bnds = [(0, None) for _ in range(q.shape[0])]
-        self.res = minimize(self.MinizeFunc, q, constraints=cons, bounds=bnds)
+        self.res = minimize(self.MinizeFunc, q, constraints=cons, bounds=bnds, tol=1e-10)
         return None
+    
+class resultObject:
+    def __init__(self, x=None, func=None):
+        self.x = x
+        self.func = func
 
-class linprogL1Solver:
+class cvxpyL1Solver:
     def __init__(self, T=None, z=None, res=None):
         self.res = res
         self.T = T
         self.z = z
-        
+
     def minimizer(self):
         """
-        Solves the L1 minimization problem with unit norm and non-negativity constraint for q.
-
-        Args:
-            T: A Nxd matrix.
-            z: A N-sized vector.
-
-        Returns:
-            The optimal q vector and the minimum L1 norm value.
+        Inputs: 
+            T: n \times d matrix
+            z: n sized vector
+        Outputs:
+            q: n sized vector
+        Solves:
+            min_q \|Tq - z\|_1 s.t. \|q\|_1 and q_i >= 0
+        this is the fastest I have until now. We need linprog
         """
-        print(self.T.shape, self.z.shape)
-        N, d = self.T.shape
-
-        # Create objective function (minimize sum of slack variables)
-        c = np.ones(N + d)
-
-        # Define upper and lower bounds (q non-negative, slacks >= 0)
-        bounds = tuple((0, None) for _ in range(N + d))
-
-        # Construct A matrix and b vector for constraints
-        A = np.zeros((2*N, N + d))
-        b = np.zeros(2*N)
-
-        # Non-negativity enforcement constraints
-        for i in range(N):
-            A[i, i] = 1
-            A[i, N + i] = 1
-            b[i] = self.z[i]
-
-        # Relationship with slack variables
-        for i in range(N):
-            A[N + i, i] = -1
-            A[N + i, N + i] = 1
-            b[N + i] = -self.z[i]
-
-        # Unit norm constraint
-        A[-1, :] = self.T.flatten()
-        b[-1] = 1
-
-        # Solve the LP problem
-        self.res = linprog(c, A_ub=A, b_ub=b, bounds=bounds)
+        N,d = self.T.shape
+        # create variable
+        q = cp.Variable(shape=d)
+        # create constraint
+        constraints = [0 <= q, cp.sum(q) == 1]
+        objective = cp.Minimize(cp.norm(self.T @ q - self.z, 1))
+        prob = cp.Problem(objective, constraints)
+        prob.solve(solver=cp.SCIPY, scipy_options={"method": "highs"})
+        # convert q to numpy array
+        q = q.value
+        q[q<=0] = 0
+        q = q / np.sum(q)
+        self.res = resultObject(q, prob.value)
         return None
+        
+class pulpL1solver:
+    def __init__(self, T=None, z=None, res=None):
+        self.T = T
+        self.z = z
+        self.res = res
     
+    def abs_expr(self, expr):
+        """
+        Custom function to handle absolute value of an LpAffineExpression.
+        """
+        return expr if expr >= 0 else -expr
     
-# # Example usage
-# T = np.array([[2, 1], [2, 1]])
-# z = np.array([3, 3])
+    def minimizer(self):
+        """
+        Inputs: 
+            T: n \times d matrix
+            z: n sized vector
+        Outputs:
+            q: n sized vector
+        Solves:
+            min_q \|Tq - z\|_1 s.t. \|q\|_1 and q_i >= 0
+            
+        Alternately:
+        Solves:
+            c^T 1
+            subject to 
+             Aq - b <= c
+            -Aq + b <= c
+            q^T1 = 1
+            q >= 0
 
-# solver = L1Solver(T=T, z=z)
-# solver.minimizer()
-
-# print("Optimal q:", solver.res.x)
-# print("Optimal value:", solver.MinizeFunc(solver.res.x))
-# v = [0.90561836, 0.32527857]#solver.res.x
-# v = v / np.linalg.norm(v)
-# print("Optimal value:", solver.MinizeFunc(v))
+        Pretty, pretty, pretty slow! :(
+        """
+        prob = pulp.LpProblem('problem',pulp.LpMinimize)
+        q = pulp.LpVariable.dicts("q", range(self.T.shape[1]), lowBound=0)
+        prob += pulp.lpSum(self.abs_expr(self.T[i][j] * q[j] - self.z[i]) for i in range(self.T.shape[0]) for j in range(self.T.shape[1]))
+        prob += pulp.lpSum(q[i] for i in range(self.T.shape[1])) == 1
+        status = prob.solve()
+        x = np.zeros(self.T.shape[-1])
+        for i in range(self.T.shape[-1]):
+            x[i] = q[i].value()
+        self.res = resultObject(x, prob.objective.value())
+        return None
