@@ -88,8 +88,8 @@ class TestCalculations:
         trials = 10
         errors = np.zeros((trials, len(Ns)))
         
-        for i in tqdm(range(trials)):
-            for j in range(len(Ns)):
+        for i in range(trials):
+            for j in tqdm(range(len(Ns))):
                 tau = np.random.rand(Ns[j])
                 tau = tau / np.sum(tau)
                 support_tau = np.array(list(range(Ns[j])))
@@ -102,7 +102,8 @@ class TestCalculations:
         pc20Errors = np.percentile(errors, q=20, axis=0)
         pc80Errors = np.percentile(errors, q=80, axis=0)
         
-        self.plot_vals(v1=meanErrors, 
+        self.plot_vals(x=Ns,
+                       v1=meanErrors, 
                        v1_lo=pc20Errors, 
                        v1_hi=pc80Errors, 
                        xlabel="Ns", 
