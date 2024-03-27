@@ -145,4 +145,4 @@ class TestCalculations:
         
 
 if __name__ == '__main__':
-    TestCalculations().checkWasserstein()
+    TestCalculations().test_lanczos()

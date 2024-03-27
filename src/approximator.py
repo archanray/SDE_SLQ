@@ -48,6 +48,8 @@ def bkde(A, k, l, seed=0):
     np.random.seed(seed)
     n = len(A)
     Z, Lambda = bki(A, k, 10)
+    
+    # filter the Zs and lambdas here
 
     P = np.eye(n) - np.dot(Z, Z.T)
     L = n
@@ -68,5 +70,10 @@ def bkde(A, k, l, seed=0):
     
     D1 = Distribution(Lambda, np.ones_like(Lambda)/k)
     outputDistro = mergeDistributions(D1, D2, aggregator(k, n))
+    return outputDistro
+
+
+def KPM(A, k, l, seed=0):
+    outputDistro = Distribution()
     return outputDistro
 
