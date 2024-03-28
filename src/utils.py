@@ -45,6 +45,9 @@ def saver(save_dict, name_adder="single_eval_method_"):
     return None
 
 def ChebyshevPolynomial(x, n):
+    """
+    chebyshev polynomial using recursive calls
+    """
     if n == 0:
         return np.ones_like(x)
     if n == 1:
@@ -55,6 +58,9 @@ def ChebyshevWrapper(x, n=0, weight=np.pi):
     return np.array(ChebyshevPolynomial(x, n)) / weight
 
 def normalizedChebyPolyFixedPoint(x, k):
+    """
+    chebyshev polynomial using dynamic programming
+    """
     res = np.zeros(k+1)
     for i in range(k+1):
         if i == 0:
@@ -73,5 +79,15 @@ def Wasserstein(D1, D2):
     values2 = list(D2.support.values())
     distance = distFun(keys1, keys2, values1, values2)
     return distance
+
+def jacksonDampingCoefficients(N):
+    """
+    requires N to be a multiple of N for the output to be of size N
+    """
+    z = int(np.ceil(N/4))
+    g = np.ones(2*z+1)
+    c = np.convolve(np.convolve(g, g), np.convolve(g, g))
+    b = c[N+1:2*N+2]
+    return b
 
 # print(ChebyshevPolynomial(list(range(4)), 2).shape)

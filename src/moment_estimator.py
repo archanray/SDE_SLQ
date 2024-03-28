@@ -1,6 +1,6 @@
 import numpy as np
 from copy import deepcopy
-from src.utils import normalizedChebyPolyFixedPoint
+from src.utils import normalizedChebyPolyFixedPoint, jacksonDampingCoefficients
 from src.optimizers import L1Solver, cvxpyL1Solver
 from tqdm import tqdm
 
@@ -42,3 +42,28 @@ def approxChebMomentMatching(tau):
     solver = cvxpyL1Solver(TNd, z)
     solver.minimizer()
     return xs, solver.res.x
+
+def discretizedJacksonDampedKPM(tau):
+    """
+    implements a discretization of algorithm 6 of https://arxiv.org/pdf/2104.03461.pdf
+    outputs a density function supported on [-1,1] in range \R^{>=0}
+    """
+    N = len(tau)
+    tau = np.insert(tau, 0, 1/np.sqrt(np.pi))
+    b = jacksonDampingCoefficients(N)
+    b = b / b[0]
+    d = 1000 # set this for discretization
+    xs = -1.0 + (2*np.array(list(range(1,d+1)), dtype=tau.dtype) / d)
+    # remove any 1s and -1s for stability issues of w
+    xs = xs[np.where(abs(xs) != 1)]
+    d = len(xs)
+    Tkbar = np.zeros((d, N))
+    for i in range(d):
+        Tkbar[i,:] = normalizedChebyPolyFixedPoint(xs[i], N)
+    Tkbar = np.insert(Tkbar, 0, np.ones(d)/np.sqrt(np.pi), axis=1) # insert as the first column
+    # sum_{k=0}^N (bk / b0) . tau . Tkbar(x)
+    coeffs = np.dot(b * tau, Tkbar.T)
+    ws = np.ones(len(xs)) / np.sqrt(1 - xs**2)
+    # q = (stilde + (w*sqrt(2)/(N*sqrt(pi)))) / (1+ sqrt(2pi)/N)
+    q = (ws * coeffs + ws*np.sqrt(2)/(N*np.sqrt(np.pi))) / (1 + np.sqrt(2*np.pi) / N)
+    return xs, q

@@ -4,8 +4,8 @@ from src.lanczos import modified_lanczos
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import os
-from src.moment_estimator import approxChebMomentMatching
-from src.utils import Wasserstein
+from src.moment_estimator import approxChebMomentMatching, discretizedJacksonDampedKPM
+from src.utils import Wasserstein, jacksonDampingCoefficients
 from src.distribution import Distribution
 from src.optimizers import cvxpyL1Solver, L1Solver, pulpL1solver
 
@@ -141,8 +141,16 @@ class TestCalculations:
             os.makedirs(savedir)
         savefilepath = os.path.join(savedir, "chebMM_distribution_visualize.pdf")
         plt.savefig(savefilepath, bbox_inches='tight',dpi=200)
+    
+    def checkOutputs(self):
+        N = 19
+        tau = np.random.rand(N)
+        tau = tau / np.sum(tau)
+        supports, probs = discretizedJacksonDampedKPM(tau)
+        return None
+        
         
         
 
 if __name__ == '__main__':
-    TestCalculations().test_lanczos()
+    TestCalculations().checkOutputs()
