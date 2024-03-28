@@ -4,7 +4,7 @@ from src.lanczos import modified_lanczos
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import os
-from src.moment_estimator import approxChebMomentMatching, discretizedJacksonDampedKPM
+from src.moment_estimator import approxChebMomentMatching, discretizedJacksonDampedKPM, hutchMomentEstimator
 from src.utils import Wasserstein, jacksonDampingCoefficients
 from src.distribution import Distribution
 from src.optimizers import cvxpyL1Solver, L1Solver, pulpL1solver
@@ -97,29 +97,46 @@ class TestCalculations:
                         filename="compare_lanczos")
         
     def testMomentMatchings(self):
-        Ns = np.array(list(range(10,100,10)))
+        Ns = np.array(list(range(20,88,8)))
         trials = 4
-        errors = np.zeros((trials, len(Ns)))
+        errors1 = np.zeros((trials, len(Ns)))
+        errors2 = np.zeros((trials, len(Ns)))
         
         for i in range(trials):
             for j in tqdm(range(len(Ns))):
-                tau = np.random.rand(Ns[j])
-                tau = tau / np.sum(tau)
-                support_tau = np.array(list(range(Ns[j])))
+                A = np.random.randn(200, 200)
+                A = (A+A.T) / 2
+                support_fx = np.real(np.linalg.eigvals(A))
+                fx = np.ones_like(support_fx) / len(support_fx)
+
+                tau = hutchMomentEstimator(A, Ns[j], 20)
+                
                 support_q, q = approxChebMomentMatching(tau)
-                D1, D2 = Distribution(support_tau, tau), Distribution(support_q, q)
-                errors[i,j] = Wasserstein(D1, D2)
-        meanErrors = np.mean(errors, axis=0)
-        pc20Errors = np.percentile(errors, q=20, axis=0)
-        pc80Errors = np.percentile(errors, q=80, axis=0)
+                D1, D2 = Distribution(support_fx, fx), Distribution(support_q, q)
+                errors1[i,j] = Wasserstein(D1, D2)
+                
+                support_q, q = discretizedJacksonDampedKPM(tau)
+                D1, D2 = Distribution(support_fx, fx), Distribution(support_q, q)
+                errors2[i,j] = Wasserstein(D1, D2)
+                
+        meanErrors1 = np.mean(errors1, axis=0)
+        pc20Errors1 = np.percentile(errors1, q=20, axis=0)
+        pc80Errors1 = np.percentile(errors1, q=80, axis=0)
+        meanErrors2 = np.mean(errors2, axis=0)
+        pc20Errors2 = np.percentile(errors2, q=20, axis=0)
+        pc80Errors2 = np.percentile(errors2, q=80, axis=0)
         
         self.plot_vals(x=Ns,
-                       v1=meanErrors, 
-                       v1_lo=pc20Errors, 
-                       v1_hi=pc80Errors, 
+                       v1=meanErrors1, 
+                       v1_lo=pc20Errors1, 
+                       v1_hi=pc80Errors1, 
                        xlabel="Ns", 
                        ylabel="W1 distance",
                        label1="ChebMM",
+                       v2=meanErrors2, 
+                       v2_lo=pc20Errors2, 
+                       v2_hi=pc80Errors2, 
+                       label2="KPM",
                        filename="compare_MM")
     
     def visualizeDistributions(self):
@@ -142,16 +159,17 @@ class TestCalculations:
             os.makedirs(savedir)
         savefilepath = os.path.join(savedir, "chebMM_distribution_visualize.pdf")
         plt.savefig(savefilepath, bbox_inches='tight',dpi=200)
+        return None
     
     def checkOutputs(self):
-        N = 19
+        N = 16
         tau = np.random.rand(N)
         tau = tau / np.sum(tau)
         supports, probs = discretizedJacksonDampedKPM(tau)
         return None
-        
+    
         
         
 
 if __name__ == '__main__':
-    TestCalculations().test_lanczos()
+    TestCalculations().testMomentMatchings()

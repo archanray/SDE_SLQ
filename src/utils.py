@@ -87,7 +87,7 @@ def jacksonDampingCoefficients(N):
     z = int(np.ceil(N/4))
     g = np.ones(2*z+1)
     c = np.convolve(np.convolve(g, g), np.convolve(g, g))
-    b = c[N+1:2*N+2]
+    b = c[N:2*N+2]
     return b
 
 # print(ChebyshevPolynomial(list(range(4)), 2).shape)

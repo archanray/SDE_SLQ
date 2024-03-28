@@ -1,4 +1,4 @@
-from scipy.optimize import minimize
+from scipy.optimize import minimize, fmin_tnc
 import numpy as np
 import cvxpy as cp
 from scipy.optimize import linprog
@@ -65,6 +65,8 @@ class cvxpyL1Solver:
         prob = cp.Problem(objective, constraints)
         prob.solve(solver=cp.SCIPY, scipy_options={"method": "highs"})
         # convert q to numpy array
+        #(prob.__dict__.keys())
+        print(prob._status)
         q = q.value
         q[q<=0] = 0
         q = q / np.sum(q)
@@ -113,4 +115,34 @@ class pulpL1solver:
         for i in range(self.T.shape[-1]):
             x[i] = q[i].value()
         self.res = resultObject(x, prob.objective.value())
+        return None
+    
+class pgdL1Solver:
+    def __init__(self, T=None, z=None, res=None):
+        self.res = res
+        self.T = T
+        self.z = z
+
+    def MinizeFunc(self, q):
+        """
+        minimizing function for L1:
+        \|Tq - z\|_1
+        """
+        return np.linalg.norm(np.dot(self.T, q) - self.z, ord=1) + np.sum(q)-1
+    
+    def minimizer(self):
+        """
+        Inputs: 
+            T: n \times d matrix
+            z: n sized vector
+        Outputs:
+            q: n sized vector
+        Solves:
+            min_q \|Tq - z\|_1 s.t. \|q\|_1 and q_i >= 0
+        this is slow too!
+        """
+        q = np.ones(self.T.shape[-1])
+        # cons = ({"type": "eq", "fun": lambda x: np.sum(x)-1})
+        bnds = [(0, None) for _ in range(q.shape[0])]
+        self.res = fmin_tnc(self.MinizeFunc, q, bounds=bnds)
         return None
