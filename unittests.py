@@ -22,6 +22,7 @@ class TestCalculations:
         print("Wasserstein between the two distributions (shouldn't be 0):", Wasserstein(D1, D2))
         print("Wasserstein between the two distributions (should be 0) :", Wasserstein(D1, D1))
         return None
+    
     def checkL1optimizer(self):
         N = 50
         d = 10000 #int(N**3/ 2)
@@ -68,7 +69,7 @@ class TestCalculations:
     def test_lanczos(self):
         trials = 10
         eps = 1e-25
-        n = 200
+        n = 100
         ks = np.array(list(range(10, n+10, 10)))
         error1 = np.zeros((trials, len(ks)))
         error2 = np.zeros((trials, len(ks)))
@@ -79,8 +80,8 @@ class TestCalculations:
             for k in range(len(ks)):
                 Q1, T1 = naive_lanczos(A, v, ks[k], return_type="QT")
                 Q2, T2 = modified_lanczos(A, v, ks[k], return_type="QT")
-                error1[i, k] = np.log((np.linalg.norm(Q1@T1@Q1.T - A) / np.linalg.norm(A, ord=2)) + eps)
-                error2[i, k] = np.log((np.linalg.norm(Q2@T2@Q2.T - A) / np.linalg.norm(A, ord=2)) + eps)
+                error1[i, k] = np.log((np.linalg.norm(Q1@T1@Q1.T - A, ord=2) / np.linalg.norm(A, ord=2)) + eps)
+                error2[i, k] = np.log((np.linalg.norm(Q2@T2@Q2.T - A, ord=2) / np.linalg.norm(A, ord=2)) + eps)
         meanError1 = np.mean(error1, axis=0)
         meanError2 = np.mean(error2, axis=0)
         p20Error1 = np.percentile(error1, q=20, axis=0)
@@ -153,4 +154,4 @@ class TestCalculations:
         
 
 if __name__ == '__main__':
-    TestCalculations().checkOutputs()
+    TestCalculations().test_lanczos()
