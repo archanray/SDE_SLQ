@@ -9,6 +9,7 @@ def hutchMomentEstimator(A, N, l):
     implements algorithm 2 of https://arxiv.org/pdf/2104.03461.pdf
     """
     np.testing.assert_allclose(A, A.T)
+    assert (N // 4 == 0)
     n = len(A)
     G = np.random.normal(0, 1/np.sqrt(l), (n,l))
     tau = np.zeros(N)
