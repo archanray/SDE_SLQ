@@ -5,6 +5,7 @@ from scipy.optimize import linprog
 import pulp
 import torch
 from tqdm import tqdm
+from torch import nn
 
 class L1Solver:
     def __init__(self, T=None, z=None, res=None):
@@ -65,13 +66,10 @@ class cvxpyL1Solver:
         constraints = [0 <= q, cp.sum(q) == 1]
         objective = cp.Minimize(cp.norm(self.T @ q - self.z, 1))
         prob = cp.Problem(objective, constraints)
-        prob.solve(solver=cp.SCIPY, scipy_options={"method": "highs"}, verbose=True)
-        # convert q to numpy array
-        #(prob.__dict__.keys())
-        print(prob._status)
+        prob.solve(solver=cp.SCIPY, scipy_options={"method": "highs"})
         q = q.value
-        q[q<=0] = 0
-        q = q / np.sum(q)
+        # q[q<=0] = 0
+        # q = q / np.sum(q)
         self.res = resultObject(q, prob.value)
         return None
         
@@ -129,24 +127,11 @@ class torchL1Solver:
         self.device = device
         pass
     
-    def objective(self, q):
+    def objective(self, q, mu):
         """
-        set up objective \|Tq-z\|_1
+        set up objective \|Tq-z\|_1 + mu(q^T 1 - 1) langrangian objective
         """
-        return torch.sum(torch.abs(torch.matmul(self.T, q) - self.z))
-    
-    def constraints(self, q):
-        """
-        set up constraints:
-        1. sum(q) = 1
-        2. q_i >= 0
-        """
-        n = len(q)
-        for i in range(n):
-            q[i] = (1.0 - sum(q)) / n
-            q[i] = max (0.0, q[i])
-            q[i] = (1.0 / sum (q)) * q[i]
-        return None
+        return torch.abs(torch.matmul(self.T, q) - self.z).sum() - mu * (q.sum() - 1)
     
     def minimizer(self):
         """
@@ -154,21 +139,30 @@ class torchL1Solver:
         
         for L1 norm minimization of Tq-z
         """
+        LR = 1e-10
         q = torch.rand(self.T.shape[-1]).to(self.device)
         q = q.to(self.T.dtype)
-        q.requires_grad_()
-        optimizer = torch.optim.Adam([q], lr=0.1)
-        for i in tqdm(range(1000)):
+        q.requires_grad = True
+        mu_0 = torch.tensor(0., requires_grad = True)
+        mu = mu_0
+        optimizer = torch.optim.Adam([q, mu], lr=LR)
+        
+        mu_old = torch.tensor(float('inf'))
+        
+        steps = 100
+        eps = 1e-6
+        i = 1
+        while torch.norm(mu_old-mu) > eps:
+            mu_old = mu.clone()
+            q_old = q.clone()
             optimizer.zero_grad()
-            y = self.objective(q)
-            y.backward()
+            f_of_q_nu = -self.objective(q, mu)
+            f_of_q_nu.backward()
             optimizer.step()
-            
-            with torch.no_grad():
-                q = self.constraints(q)
-        
-        val = self.objective(q)
+            print(f'At step {i+1:2} the function value is {f_of_q_nu.item(): 1.4f} and mu={mu: 0.4f}' )
+            i += 1
+
         q = q.cpu().detach().numpy()
-        
-        self.res = resultObject(q.cpu().detach().numpy(), val)
+        print(q.sum())
+        self.res = resultObject(q)
         return

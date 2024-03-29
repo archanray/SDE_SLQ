@@ -2,8 +2,8 @@ import numpy as np
 from copy import deepcopy
 from src.utils import normalizedChebyPolyFixedPoint, jacksonDampingCoefficients
 # from src.optimizers import pgdL1Solver as Solver
-# from src.optimizers import L1Solver as Solver
-from src.optimizers import cvxpyL1Solver as Solver
+from src.optimizers import L1Solver as Solver2
+from src.optimizers import cvxpyL1Solver as Solver1
 from tqdm import tqdm
 
 def hutchMomentEstimator(A, N, l):
@@ -13,7 +13,8 @@ def hutchMomentEstimator(A, N, l):
     np.testing.assert_allclose(A, A.T)
     assert (N % 4 == 0)
     n = len(A)
-    G = np.random.normal(0, 1/np.sqrt(l), (n,l))
+    G = np.random.binomial(1, 0.5, size=(n, n))
+    G[G==0] = -1
     tau = np.zeros(N)
     TAG0 = deepcopy(G)
     # run the chebyshev series below
@@ -27,24 +28,22 @@ def hutchMomentEstimator(A, N, l):
             TAG1 = deepcopy(TAG2)
         pass
     tau = tau * (np.sqrt(2/np.pi) / l*n)
-    tau[tau <= 0] = 0
     return tau
 
 def approxChebMomentMatching(tau):
     """
     implements algorithm 1 of https://arxiv.org/pdf/2104.03461.pdf
     """
-    print(tau[tau<=0])
     N = len(tau)
     nIntegers = np.array(list(range(1,N+1)))
     z = np.divide(tau, nIntegers)
-    d = 1000#int(np.ceil(N**3 / 2))
+    d = 10000#int(np.ceil(N**3 / 2))
     xs = -1.0 + (2*np.array(list(range(1,d+1)), dtype=tau.dtype) / d)
     Tkbar = np.zeros((N, d))
     for i in range(d):
         Tkbar[:, i] = normalizedChebyPolyFixedPoint(xs[i], N)
     TNd = np.divide(Tkbar, nIntegers.reshape(-1,1))
-    solver = Solver(TNd, z)
+    solver = Solver1(TNd, z)
     solver.minimizer()
     return xs, solver.res.x
 

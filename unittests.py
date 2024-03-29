@@ -35,12 +35,10 @@ class TestCalculations:
         
         # solver1 = Solver1(T, z)
         # solver1.minimizer()
-        
         # print("smallest value achieved using optimize.linprog:", solver1.res.func)
         
         solver2 = Solver4(T, z)
         solver2.minimizer()
-        
         # print("smallest value achieved using optimize.minimize:", solver2.res.func)
         # print("sum q values:", np.sum(solver2.res.x))
         
@@ -109,6 +107,7 @@ class TestCalculations:
             for j in tqdm(range(len(Ns))):
                 A = np.random.randn(200, 200)
                 A = (A+A.T) / 2
+                A = A / np.linalg.norm(A, 2)
                 support_fx = np.real(np.linalg.eigvals(A))
                 fx = np.ones_like(support_fx) / len(support_fx)
 
@@ -171,8 +170,17 @@ class TestCalculations:
         supports, probs = discretizedJacksonDampedKPM(tau)
         return None
     
+    def momentMatchingSingleton(self):
+        A = np.random.randn(200, 200)
+        A = (A+A.T) / 2
+        A = A / np.linalg.norm(A, 2)
+        support_fx = np.real(np.linalg.eigvals(A))
+        fx = np.ones_like(support_fx) / len(support_fx)
+        tau = hutchMomentEstimator(A, 20, 100)
+        print(approxChebMomentMatching(tau))
+        return None
         
         
 
 if __name__ == '__main__':
-    TestCalculations().checkL1Optimizer()
+    TestCalculations().testMomentMatchings()

@@ -73,10 +73,14 @@ def normalizedChebyPolyFixedPoint(x, k):
 
 def Wasserstein(D1, D2):
     from scipy.stats import wasserstein_distance as distFun
-    keys1 = list(D1.support.keys())
-    values1 = list(D1.support.values())
-    keys2 = list(D2.support.keys())
-    values2 = list(D2.support.values())
+    keys1 = np.array(list(D1.support.keys()))
+    values1 = np.array(list(D1.support.values()))
+    keys2 = np.array(list(D2.support.keys()))
+    values2 = np.array(list(D2.support.values()))
+    values1[values1 <= 0] = 0
+    values1 = values1 / np.sum(values1)
+    values2[values2 <= 0] = 0
+    values2 = values2 / np.sum(values2)
     distance = distFun(keys1, keys2, values1, values2)
     return distance
 
