@@ -17,6 +17,7 @@ def get_data(name):
             dataset_size = 500
             data = np.random.random((dataset_size, dataset_size))
             data = (data.T + data) / 2 # set all elements to [-1, 1]
+            data = data / np.linalg.norm(data, 2) # set A's spectral norm to 1
             with open(file_path, "wb") as f:
                 np.save(f, data)
             return data, dataset_size
