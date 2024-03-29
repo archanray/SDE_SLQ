@@ -3,6 +3,7 @@ import numpy as np
 import cvxpy as cp
 from scipy.optimize import linprog
 import pulp
+import torch
 
 class L1Solver:
     def __init__(self, T=None, z=None, res=None):
@@ -63,7 +64,7 @@ class cvxpyL1Solver:
         constraints = [0 <= q, cp.sum(q) == 1]
         objective = cp.Minimize(cp.norm(self.T @ q - self.z, 1))
         prob = cp.Problem(objective, constraints)
-        prob.solve(solver=cp.SCIPY, scipy_options={"method": "highs"})
+        prob.solve(solver=cp.SCIPY, scipy_options={"method": "highs"}, verbose=True)
         # convert q to numpy array
         #(prob.__dict__.keys())
         print(prob._status)
@@ -117,32 +118,25 @@ class pulpL1solver:
         self.res = resultObject(x, prob.objective.value())
         return None
     
-class pgdL1Solver:
-    def __init__(self, T=None, z=None, res=None):
+class torchL1Solver:
+    def __init__(self, res=None, T=None, z=None):
         self.res = res
-        self.T = T
-        self.z = z
-
-    def MinizeFunc(self, q):
-        """
-        minimizing function for L1:
-        \|Tq - z\|_1
-        """
-        return np.linalg.norm(np.dot(self.T, q) - self.z, ord=1) + np.sum(q)-1
+        # convert inputs to torch variables
+        self.T = torch.from_numpy(T)
+        self.z = torch.from_numpy(z)
+        pass
+    
+    def objective(self):
+        return None
+    
+    def constraints(self):
+        return None
     
     def minimizer(self):
         """
-        Inputs: 
-            T: n \times d matrix
-            z: n sized vector
-        Outputs:
-            q: n sized vector
-        Solves:
-            min_q \|Tq - z\|_1 s.t. \|q\|_1 and q_i >= 0
-        this is slow too!
+        solve projected gradient descent with given objective and constraints
+        
+        for L1 norm minimization of Tq-z
         """
-        q = np.ones(self.T.shape[-1])
-        # cons = ({"type": "eq", "fun": lambda x: np.sum(x)-1})
-        bnds = [(0, None) for _ in range(q.shape[0])]
-        self.res = fmin_tnc(self.MinizeFunc, q, bounds=bnds)
+        q = np.random.randn(self.T.shape[-1])
         return None

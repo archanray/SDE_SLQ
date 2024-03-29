@@ -7,7 +7,10 @@ import os
 from src.moment_estimator import approxChebMomentMatching, discretizedJacksonDampedKPM, hutchMomentEstimator
 from src.utils import Wasserstein, jacksonDampingCoefficients
 from src.distribution import Distribution
-from src.optimizers import cvxpyL1Solver, L1Solver, pulpL1solver
+from src.optimizers import cvxpyL1Solver as Solver1
+from src.optimizers import L1Solver as Solver2
+from src.optimizers import pulpL1solver as Solver3
+from src.optimizers import torchL1Solver as Solver4
 
 class TestCalculations:
     def checkWasserstein(self):
@@ -23,20 +26,20 @@ class TestCalculations:
         print("Wasserstein between the two distributions (should be 0) :", Wasserstein(D1, D1))
         return None
     
-    def checkL1optimizer(self):
+    def checkL1Optimizer(self):
         N = 50
         d = 10000 #int(N**3/ 2)
         T = np.random.randn(N, d)
         z = np.random.rand(N)
         z = z/np.sum(z)
         
-        solver1 = cvxpyL1Solver(T, z)
-        solver1.minimizer()
+        # solver1 = Solver1(T, z)
+        # solver1.minimizer()
         
-        print("smallest value achieved using optimize.linprog:", solver1.res.func)
+        # print("smallest value achieved using optimize.linprog:", solver1.res.func)
         
-        # solver2 = pulpL1solver(T, z)
-        # solver2.minimizer()
+        solver2 = Solver4(T, z)
+        solver2.minimizer()
         
         # print("smallest value achieved using optimize.minimize:", solver2.res.func)
         # print("sum q values:", np.sum(solver2.res.x))
@@ -172,4 +175,4 @@ class TestCalculations:
         
 
 if __name__ == '__main__':
-    TestCalculations().testMomentMatchings()
+    TestCalculations().checkL1Optimizer()

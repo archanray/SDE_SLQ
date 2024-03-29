@@ -1,9 +1,9 @@
 import numpy as np
 from copy import deepcopy
 from src.utils import normalizedChebyPolyFixedPoint, jacksonDampingCoefficients
-from src.optimizers import pgdL1Solver as Solver
+# from src.optimizers import pgdL1Solver as Solver
 # from src.optimizers import L1Solver as Solver
-# from src.optimizers import cvxpyL1Solver as Solver
+from src.optimizers import cvxpyL1Solver as Solver
 from tqdm import tqdm
 
 def hutchMomentEstimator(A, N, l):
@@ -34,6 +34,7 @@ def approxChebMomentMatching(tau):
     """
     implements algorithm 1 of https://arxiv.org/pdf/2104.03461.pdf
     """
+    print(tau[tau<=0])
     N = len(tau)
     nIntegers = np.array(list(range(1,N+1)))
     z = np.divide(tau, nIntegers)
