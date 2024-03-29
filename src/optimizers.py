@@ -4,6 +4,7 @@ import cvxpy as cp
 from scipy.optimize import linprog
 import pulp
 import torch
+from tqdm import tqdm
 
 class L1Solver:
     def __init__(self, T=None, z=None, res=None):
@@ -119,17 +120,32 @@ class pulpL1solver:
         return None
     
 class torchL1Solver:
-    def __init__(self, res=None, T=None, z=None):
-        self.res = res
+    def __init__(self, T=None, z=None, res=None):
         # convert inputs to torch variables
-        self.T = torch.from_numpy(T)
-        self.z = torch.from_numpy(z)
+        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        self.T = torch.from_numpy(T).to(device)
+        self.z = torch.from_numpy(z).to(device)
+        self.res = res
+        self.device = device
         pass
     
-    def objective(self):
-        return None
+    def objective(self, q):
+        """
+        set up objective \|Tq-z\|_1
+        """
+        return torch.sum(torch.abs(torch.matmul(self.T, q) - self.z))
     
-    def constraints(self):
+    def constraints(self, q):
+        """
+        set up constraints:
+        1. sum(q) = 1
+        2. q_i >= 0
+        """
+        n = len(q)
+        for i in range(n):
+            q[i] = (1.0 - sum(q)) / n
+            q[i] = max (0.0, q[i])
+            q[i] = (1.0 / sum (q)) * q[i]
         return None
     
     def minimizer(self):
@@ -138,5 +154,21 @@ class torchL1Solver:
         
         for L1 norm minimization of Tq-z
         """
-        q = np.random.randn(self.T.shape[-1])
-        return None
+        q = torch.rand(self.T.shape[-1]).to(self.device)
+        q = q.to(self.T.dtype)
+        q.requires_grad_()
+        optimizer = torch.optim.Adam([q], lr=0.1)
+        for i in tqdm(range(1000)):
+            optimizer.zero_grad()
+            y = self.objective(q)
+            y.backward()
+            optimizer.step()
+            
+            with torch.no_grad():
+                q = self.constraints(q)
+        
+        val = self.objective(q)
+        q = q.cpu().detach().numpy()
+        
+        self.res = resultObject(q.cpu().detach().numpy(), val)
+        return
