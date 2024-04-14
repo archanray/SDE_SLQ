@@ -7,8 +7,32 @@ import os
 from src.moment_estimator import approxChebMomentMatching, discretizedJacksonDampedKPM, hutchMomentEstimator
 from src.utils import Wasserstein, jacksonDampingCoefficients
 from src.distribution import Distribution
-from src.optimizers import cvxpyL1Solver as Solver1
-from src.optimizers import pgdSolver as Solver2
+from src.optimizers import cvxpyL1Solver
+from src.optimizers import pgdSolver
+from src.get_dataset import get_data
+import scipy as sp
+
+
+def baselineHutch(data, deg, l=1000):
+    """
+    code adapted from Aditya
+    """
+    num_rand_vecs = l
+    n = len(data)
+    moments = np.zeros(deg + 1)
+    rand_vecs = 2*np.random.binomial(1, 0.5, size=(n, num_rand_vecs)) - 1
+    v_iminus1 = rand_vecs
+    v_i = np.dot(data, rand_vecs)
+    
+    moments[0] = np.trace(np.matmul(rand_vecs.T, v_iminus1))/(n*num_rand_vecs)
+    moments[1] = np.trace(np.matmul(rand_vecs.T, v_i))/(n*num_rand_vecs)
+    for i in range(2, deg + 1):
+        temp = v_i
+        matmul_vec = np.dot(data, rand_vecs)
+        v_i = 2*matmul_vec - v_iminus1
+        v_iminus1 = temp
+        moments[i] = np.trace(np.matmul(rand_vecs.T, v_i))/(n*num_rand_vecs)
+    return moments
 
 class TestCalculations:
     def checkWasserstein(self):
@@ -31,12 +55,12 @@ class TestCalculations:
         z = np.random.rand(N)
         z = z/np.sum(z)
         
-        solver1 = Solver1(T, z)
+        solver1 = cvxpyL1Solver(T, z)
         solver1.minimizer()
         print("smallest value achieved using optimize.linprog:", solver1.res.fun)
         print("sum q values:", np.sum(solver1.res.x))
         
-        solver2 = Solver2(T, z)
+        solver2 = pgdSolver(T, z)
         solver2.minimizer()
         print("smallest value achieved using optimize.minimize:", solver2.res.fun)
         print("sum q values:", np.sum(solver2.res.x))
@@ -189,6 +213,58 @@ class TestCalculations:
         print("W1 distance with CMM and PGD:", Wasserstein(D_baseline, D_CMM_PGD))
         print("W1 distance with CMM and Numpy OPTIMIZE:", Wasserstein(D_baseline, D_CMM_OPT))
         return None
+    
+    def checkHutch(self):
+        dataset = "gaussian"
+        data, n = get_data(dataset)
+        moments = 12
+        
+        tau_here = hutchMomentEstimator(data, moments, l=1000)
+        tau_baseline = baselineHutch(data, moments, l=1000)
+        print(tau_here, tau_baseline)
+        return None
+    
+    
+    def sdeComputer(self, data, degree, method = "CMM"):
+        if method == "CMM":
+            tau = hutchMomentEstimator(data, degree, degree)
+            supports, q = approxChebMomentMatching(tau)
+            return supports, q
+        return None
+    
+    def checkSDEApproxError(self, data, moments, support_true, method="CMM"):
+        trials = 10
+        quantile_lo = 25
+        quantile_hi = 75
+        errors = np.zeros((trials,len(moments)))
+        pdf_true = np.ones_like(support_true) / len(support_true)
+        
+        for t in tqdm(range(trials)):
+            for j in range(len(moments)):
+                support_current, pdf_current = self.sdeComputer(data, moments[j], method = method)
+                errors[t,j] = sp.stats.wasserstein_distance(support_true, support_current, pdf_true, pdf_current)
+            pass
+        
+        errors_mean = np.mean(errors, axis=0)
+        errors_lo = np.percentile(errors, q=quantile_lo, axis=0)
+        errors_hi = np.percentile(errors, q=quantile_hi, axis=0)
+        
+        return errors_mean, errors_lo, errors_hi
+    
+    def runSDEexperiments(self):
+        dataset = "gaussian"
+        data, n = get_data(dataset)
+        support_true = np.real(np.linalg.eigvals(data))
+        methods = ["CMM"]
+        moments = list(range(4,60,4))
+        
+        for i in range(len(methods)):
+            errors_mean, errors_lo, errors_hi = self.checkSDEApproxError(data, moments, support_true, method=methods[i])
+            
+            plt.plot(moments, errors_mean, label=methods[i])
+            plt.fill_between(moments, errors_lo, errors_hi, alpha=0.2)
+        
+        plt.savefig("figures/unittests/SDE_approximation_error.pdf", bbox_inches='tight', dpi=200)
         
 if __name__ == '__main__':
-    TestCalculations().momentMatchingSingleton()
+    TestCalculations().checkHutch()

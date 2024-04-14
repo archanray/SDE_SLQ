@@ -13,12 +13,11 @@ def hutchMomentEstimator(A, N, l):
     np.testing.assert_allclose(A, A.T)
     assert (N % 4 == 0)
     n = len(A)
-    G = np.random.binomial(1, 0.5, size=(n, n))
-    G[G==0] = -1
-    tau = np.zeros(N)
+    G = 2*np.random.binomial(1, 0.5, size=(n, l)) - 1.0
+    tau = np.zeros(N+1)
     TAG0 = deepcopy(G)
     # run the chebyshev series below
-    for k in range(N):
+    for k in range(N+1):
         tau[k] = np.sum(np.multiply(G, TAG0))
         if k == 0:
             TAG1 = np.dot(A, G)
@@ -27,6 +26,7 @@ def hutchMomentEstimator(A, N, l):
             TAG0 = deepcopy(TAG1)
             TAG1 = deepcopy(TAG2)
         pass
+    tau = tau[1:]
     tau = tau * (np.sqrt(2/np.pi) / l*n)
     return tau
 
