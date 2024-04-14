@@ -9,6 +9,7 @@
 6. cvxpy
 7. pulp
 8. pytorch
+9. `pip install git+https://github.com/amkatrutsa/liboptpy`
 
 ## Entry points:
 1. run `main.py` -- check options in the file to choose from. This code runs the estimators and saves the results in the folder outputs

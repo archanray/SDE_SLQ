@@ -35,11 +35,11 @@ class TestCalculations:
         
         # solver1 = Solver1(T, z)
         # solver1.minimizer()
-        # print("smallest value achieved using optimize.linprog:", solver1.res.func)
+        # print("smallest value achieved using optimize.linprog:", solver1.res.fun)
         
         solver2 = Solver4(T, z)
         solver2.minimizer()
-        # print("smallest value achieved using optimize.minimize:", solver2.res.func)
+        # print("smallest value achieved using optimize.minimize:", solver2.res.fun)
         # print("sum q values:", np.sum(solver2.res.x))
         
         return None
@@ -177,10 +177,16 @@ class TestCalculations:
         support_fx = np.real(np.linalg.eigvals(A))
         fx = np.ones_like(support_fx) / len(support_fx)
         tau = hutchMomentEstimator(A, 20, 100)
-        print(approxChebMomentMatching(tau))
+        supportq1, q1 = approxChebMomentMatching(tau)
+        supportq2, q2 = discretizedJacksonDampedKPM(tau)
+        D_baseline = Distribution(support_fx, fx)
+        D_CMM = Distribution(supportq1, q1)
+        D_KPM = Distribution(supportq2, q2)
+        print("W1 distance with CMM:", Wasserstein(D_baseline, D_CMM))
+        print("W1 distance with KPM:", Wasserstein(D_baseline, D_KPM))
         return None
         
         
 
 if __name__ == '__main__':
-    TestCalculations().testMomentMatchings()
+    TestCalculations().momentMatchingSingleton()

@@ -37,14 +37,18 @@ def approxChebMomentMatching(tau):
     N = len(tau)
     nIntegers = np.array(list(range(1,N+1)))
     z = np.divide(tau, nIntegers)
-    d = 10000#int(np.ceil(N**3 / 2))
+    d = 100#int(np.ceil(N**3 / 2))
     xs = -1.0 + (2*np.array(list(range(1,d+1)), dtype=tau.dtype) / d)
     Tkbar = np.zeros((N, d))
     for i in range(d):
         Tkbar[:, i] = normalizedChebyPolyFixedPoint(xs[i], N)
     TNd = np.divide(Tkbar, nIntegers.reshape(-1,1))
+    solver = Solver2(TNd, z)
+    solver.minimizer()
+    print(solver.res.fun)
     solver = Solver1(TNd, z)
     solver.minimizer()
+    print(solver.res.fun)
     return xs, solver.res.x
 
 def discretizedJacksonDampedKPM(tau):
@@ -56,7 +60,7 @@ def discretizedJacksonDampedKPM(tau):
     tau = np.insert(tau, 0, 1/np.sqrt(np.pi))
     b = jacksonDampingCoefficients(N)
     b = b / b[0]
-    d = 1000 # set this for discretization
+    d = 10000 # set this for discretization
     xs = -1.0 + (2*np.array(list(range(1,d+1)), dtype=tau.dtype) / d)
     # remove any 1s and -1s for stability issues of w
     xs = xs[np.where(abs(xs) != 1)]
