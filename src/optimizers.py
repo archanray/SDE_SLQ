@@ -82,15 +82,15 @@ class pgdSolver:
         self.z = z
         self.res = res
         
-    def l1forward(x, A, b):
-        return np.linalg.norm(np.dot(A, x)-b, ord=1)
+    def l1forward(self, x):
+        return np.linalg.norm(np.dot(self.T, x)-self.z, ord=1)
     
-    def l1backward(x, A, b):
+    def l1backward(self, x):
         l1_tol = 1e-12
-        v = np.dot(A, x) - b
-        return np.dot(A.T, (np.abs(v) > l1_tol)*np.sign(v))
+        v = np.dot(self.T, x) - self.z
+        return np.dot(self.T.T, (np.abs(v) > l1_tol)*np.sign(v))
     
-    def projection_simplex(y):
+    def projection_simplex(self, y):
         x = y.copy()
         if np.all(x >= 0) and np.sum(x) <= 1:
             return x
@@ -113,22 +113,26 @@ class pgdSolver:
             t_hat = (temp_sum + x[n - 1] - 1.0) / n
         return np.maximum(y - t_hat, 0)
     
-    def minimizer(self):
-        np.zeros(len(cheb_mesh))
-        x0[-1] = 1.
-        x0 = 
-        x = x0
+    def simplex_FW_linsolver(self, grad): 
+        x = np.zeros(len(grad))
+        x[np.argmin(grad)] = 1. 
+        return x
+    
+    def minimizer(self, max_iter=100000, tol=1e-5):
+        x = np.zeros(len(self.T.shape[1]))
+        x[-1] = 1.
         it = 2
-        f_vals = [np.inf, f(x)] 
+        f_vals = [np.inf, self.l1forward(x)]
         x_vals = [x]
         grad_vals = []
+        
         while (f_vals[-2] - f_vals[-1]) > tol:
             if it >= max_iter: 
                 print('Max iter reached!')
                 break
-            g = grad(x)
-            x = x + (2/(2 + it))*(linsolver(g) - x)
-            f_vals += [f(x)]  
+            g = self.l1backward(x)
+            x = x + (2/(2 + it))*(self.simplex_FW_linsolver(g) - x)
+            f_vals += [self.l1forward(x)]
             x_vals += [x]
             grad_vals += [g]
             it += 1
