@@ -8,9 +8,7 @@ from src.moment_estimator import approxChebMomentMatching, discretizedJacksonDam
 from src.utils import Wasserstein, jacksonDampingCoefficients
 from src.distribution import Distribution
 from src.optimizers import cvxpyL1Solver as Solver1
-from src.optimizers import L1Solver as Solver2
-from src.optimizers import pulpL1solver as Solver3
-from src.optimizers import torchL1Solver as Solver4
+from src.optimizers import pgdSolver as Solver2
 
 class TestCalculations:
     def checkWasserstein(self):
@@ -33,14 +31,15 @@ class TestCalculations:
         z = np.random.rand(N)
         z = z/np.sum(z)
         
-        # solver1 = Solver1(T, z)
-        # solver1.minimizer()
-        # print("smallest value achieved using optimize.linprog:", solver1.res.fun)
+        solver1 = Solver1(T, z)
+        solver1.minimizer()
+        print("smallest value achieved using optimize.linprog:", solver1.res.fun)
+        print("sum q values:", np.sum(solver1.res.x))
         
-        solver2 = Solver4(T, z)
+        solver2 = Solver2(T, z)
         solver2.minimizer()
-        # print("smallest value achieved using optimize.minimize:", solver2.res.fun)
-        # print("sum q values:", np.sum(solver2.res.x))
+        print("smallest value achieved using optimize.minimize:", solver2.res.fun)
+        print("sum q values:", np.sum(solver2.res.x))
         
         return None
     
@@ -177,16 +176,19 @@ class TestCalculations:
         support_fx = np.real(np.linalg.eigvals(A))
         fx = np.ones_like(support_fx) / len(support_fx)
         tau = hutchMomentEstimator(A, 20, 100)
-        supportq1, q1 = approxChebMomentMatching(tau)
-        supportq2, q2 = discretizedJacksonDampedKPM(tau)
+        supportq1, q1 = approxChebMomentMatching(tau, method="cvxpy")
+        supportq2, q2 = approxChebMomentMatching(tau, method="pgd") #discretizedJacksonDampedKPM(tau)
+        supportq3, q3 = approxChebMomentMatching(tau, method="optimize")
+        print("TAU:", tau, "\nQ1:", q1, "\nQ2:", q2, "\nQ3:", q3)
+        print("sum of vals:", sum(q1), sum(q2), sum(q3))
         D_baseline = Distribution(support_fx, fx)
-        D_CMM = Distribution(supportq1, q1)
-        D_KPM = Distribution(supportq2, q2)
-        print("W1 distance with CMM:", Wasserstein(D_baseline, D_CMM))
-        print("W1 distance with KPM:", Wasserstein(D_baseline, D_KPM))
+        D_CMM_CVXPY = Distribution(supportq1, q1)
+        D_CMM_PGD = Distribution(supportq2, q2)
+        D_CMM_OPT = Distribution(supportq3, q3)
+        print("W1 distance with CMM and CVXPY:", Wasserstein(D_baseline, D_CMM_CVXPY))
+        print("W1 distance with CMM and PGD:", Wasserstein(D_baseline, D_CMM_PGD))
+        print("W1 distance with CMM and Numpy OPTIMIZE:", Wasserstein(D_baseline, D_CMM_OPT))
         return None
         
-        
-
 if __name__ == '__main__':
     TestCalculations().momentMatchingSingleton()

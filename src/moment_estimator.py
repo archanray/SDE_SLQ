@@ -1,9 +1,9 @@
 import numpy as np
 from copy import deepcopy
 from src.utils import normalizedChebyPolyFixedPoint, jacksonDampingCoefficients
-# from src.optimizers import pgdL1Solver as Solver
-from src.optimizers import L1Solver as Solver2
-from src.optimizers import cvxpyL1Solver as Solver1
+from src.optimizers import L1Solver
+from src.optimizers import cvxpyL1Solver
+from src.optimizers import pgdSolver
 from tqdm import tqdm
 
 def hutchMomentEstimator(A, N, l):
@@ -30,7 +30,7 @@ def hutchMomentEstimator(A, N, l):
     tau = tau * (np.sqrt(2/np.pi) / l*n)
     return tau
 
-def approxChebMomentMatching(tau):
+def approxChebMomentMatching(tau, method="pgd"):
     """
     implements algorithm 1 of https://arxiv.org/pdf/2104.03461.pdf
     """
@@ -43,12 +43,13 @@ def approxChebMomentMatching(tau):
     for i in range(d):
         Tkbar[:, i] = normalizedChebyPolyFixedPoint(xs[i], N)
     TNd = np.divide(Tkbar, nIntegers.reshape(-1,1))
-    solver = Solver2(TNd, z)
+    if method == "cvxpy":
+        solver = cvxpyL1Solver(TNd, z)
+    if method == "pgd":
+        solver = pgdSolver(TNd, z)
+    if method == "optimize":
+        solver = L1Solver(TNd, z)
     solver.minimizer()
-    print(solver.res.fun)
-    solver = Solver1(TNd, z)
-    solver.minimizer()
-    print(solver.res.fun)
     return xs, solver.res.x
 
 def discretizedJacksonDampedKPM(tau):

@@ -63,7 +63,7 @@ class cvxpyL1Solver:
         # create variable
         q = cp.Variable(shape=d)
         # create constraint
-        constraints = [0 <= q, cp.sum(q) == 1]
+        constraints = [0 <= q, cp.sum(q) == 1, q<=1]
         objective = cp.Minimize(cp.norm(self.T @ q - self.z, 1))
         prob = cp.Problem(objective, constraints)
         prob.solve(solver=cp.SCIPY, scipy_options={"method": "highs"})
@@ -90,36 +90,13 @@ class pgdSolver:
         v = np.dot(self.T, x) - self.z
         return np.dot(self.T.T, (np.abs(v) > l1_tol)*np.sign(v))
     
-    def projection_simplex(self, y):
-        x = y.copy()
-        if np.all(x >= 0) and np.sum(x) <= 1:
-            return x
-        x = np.clip(x, 0, np.max(x))
-        if np.sum(x) <= 1:
-            return x
-        n = x.shape[0]
-        bget = False
-        x.sort()
-        x = x[::-1]
-        temp_sum = 0
-        t_hat = 0
-        for i in range(n - 1):
-            temp_sum += x[i]
-            t_hat = (temp_sum - 1.0) / (i + 1)
-            if t_hat >= x[i + 1]:
-                bget = True
-                break
-        if not bget:
-            t_hat = (temp_sum + x[n - 1] - 1.0) / n
-        return np.maximum(y - t_hat, 0)
-    
     def simplex_FW_linsolver(self, grad): 
         x = np.zeros(len(grad))
         x[np.argmin(grad)] = 1. 
         return x
     
     def minimizer(self, max_iter=100000, tol=1e-5):
-        x = np.zeros(len(self.T.shape[1]))
+        x = np.zeros(self.T.shape[1])
         x[-1] = 1.
         it = 2
         f_vals = [np.inf, self.l1forward(x)]
@@ -136,4 +113,6 @@ class pgdSolver:
             x_vals += [x]
             grad_vals += [g]
             it += 1
-        return x
+        
+        self.res = resultObject(x, f_vals[-1])
+        return None
