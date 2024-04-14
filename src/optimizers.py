@@ -90,4 +90,46 @@ class pgdSolver:
         v = np.dot(A, x) - b
         return np.dot(A.T, (np.abs(v) > l1_tol)*np.sign(v))
     
+    def projection_simplex(y):
+        x = y.copy()
+        if np.all(x >= 0) and np.sum(x) <= 1:
+            return x
+        x = np.clip(x, 0, np.max(x))
+        if np.sum(x) <= 1:
+            return x
+        n = x.shape[0]
+        bget = False
+        x.sort()
+        x = x[::-1]
+        temp_sum = 0
+        t_hat = 0
+        for i in range(n - 1):
+            temp_sum += x[i]
+            t_hat = (temp_sum - 1.0) / (i + 1)
+            if t_hat >= x[i + 1]:
+                bget = True
+                break
+        if not bget:
+            t_hat = (temp_sum + x[n - 1] - 1.0) / n
+        return np.maximum(y - t_hat, 0)
+    
     def minimizer(self):
+        np.zeros(len(cheb_mesh))
+        x0[-1] = 1.
+        x0 = 
+        x = x0
+        it = 2
+        f_vals = [np.inf, f(x)] 
+        x_vals = [x]
+        grad_vals = []
+        while (f_vals[-2] - f_vals[-1]) > tol:
+            if it >= max_iter: 
+                print('Max iter reached!')
+                break
+            g = grad(x)
+            x = x + (2/(2 + it))*(linsolver(g) - x)
+            f_vals += [f(x)]  
+            x_vals += [x]
+            grad_vals += [g]
+            it += 1
+        return x
