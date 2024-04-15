@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 import os
 from src.moment_estimator import approxChebMomentMatching, discretizedJacksonDampedKPM, hutchMomentEstimator
-from src.utils import Wasserstein, jacksonDampingCoefficients
+from src.utils import Wasserstein, jacksonDampingCoefficients, jackson_poly_coeffs
 from src.distribution import Distribution
 from src.optimizers import cvxpyL1Solver
 from src.optimizers import pgdSolver
@@ -13,14 +13,14 @@ from src.get_dataset import get_data
 import scipy as sp
 
 
-def baselineHutch(data, deg, l=1000):
+def baselineHutch(data, deg, rand_vecs, l=1000):
     """
     code adapted from Aditya
     """
     num_rand_vecs = l
     n = len(data)
     moments = np.zeros(deg + 1)
-    rand_vecs = 2*np.random.binomial(1, 0.5, size=(n, num_rand_vecs)) - 1
+    # rand_vecs = 2*np.random.binomial(1, 0.5, size=(n, num_rand_vecs)) - 1
     v_iminus1 = rand_vecs
     v_i = np.dot(data, rand_vecs)
     
@@ -28,11 +28,11 @@ def baselineHutch(data, deg, l=1000):
     moments[1] = np.trace(np.matmul(rand_vecs.T, v_i))/(n*num_rand_vecs)
     for i in range(2, deg + 1):
         temp = v_i
-        matmul_vec = np.dot(data, rand_vecs)
+        matmul_vec = np.dot(data, v_i)
         v_i = 2*matmul_vec - v_iminus1
         v_iminus1 = temp
         moments[i] = np.trace(np.matmul(rand_vecs.T, v_i))/(n*num_rand_vecs)
-    return moments
+    return moments * np.sqrt(2/np.pi)
 
 class TestCalculations:
     def checkWasserstein(self):
@@ -218,17 +218,21 @@ class TestCalculations:
         dataset = "gaussian"
         data, n = get_data(dataset)
         moments = 12
+        rand_vecs = 2*np.random.binomial(1, 0.5, size=(n, 1000)) - 1
         
-        tau_here = hutchMomentEstimator(data, moments, l=1000)
-        tau_baseline = baselineHutch(data, moments, l=1000)
-        print(tau_here, tau_baseline)
+        tau_here = hutchMomentEstimator(data, moments, G=rand_vecs, l=1000)
+        tau_baseline = baselineHutch(data, moments, rand_vecs, l=1000)
+        print(tau_here, "\n", tau_baseline)
         return None
-    
     
     def sdeComputer(self, data, degree, method = "CMM"):
         if method == "CMM":
             tau = hutchMomentEstimator(data, degree, degree)
-            supports, q = approxChebMomentMatching(tau)
+            supports, q = approxChebMomentMatching(tau, method="cvxpy")
+            return supports, q
+        if method == "KPM":
+            tau = hutchMomentEstimator(data, degree, degree)
+            supports, q = discretizedJacksonDampedKPM(tau)
             return supports, q
         return None
     
@@ -252,10 +256,10 @@ class TestCalculations:
         return errors_mean, errors_lo, errors_hi
     
     def runSDEexperiments(self):
-        dataset = "gaussian"
+        dataset = "uniform"
         data, n = get_data(dataset)
         support_true = np.real(np.linalg.eigvals(data))
-        methods = ["CMM"]
+        methods = ["CMM", "KPM"]
         moments = list(range(4,60,4))
         
         for i in range(len(methods)):
@@ -264,7 +268,14 @@ class TestCalculations:
             plt.plot(moments, errors_mean, label=methods[i])
             plt.fill_between(moments, errors_lo, errors_hi, alpha=0.2)
         
-        plt.savefig("figures/unittests/SDE_approximation_error.pdf", bbox_inches='tight', dpi=200)
+        plt.legend()
+        plt.savefig("figures/unittests/SDE_approximation_error_"+dataset+".pdf", bbox_inches='tight', dpi=200)
         
+    def checkJacksonPolynomial(self):
+        deg = 20
+        print("J-Polys Here:", jacksonDampingCoefficients(deg))
+        print("J-Polys BLin:", jackson_poly_coeffs(deg))
+        return None
+                
 if __name__ == '__main__':
-    TestCalculations().checkHutch()
+    TestCalculations().checkJacksonPolynomial()

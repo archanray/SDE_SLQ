@@ -1,36 +1,40 @@
 import numpy as np
 from copy import deepcopy
-from src.utils import normalizedChebyPolyFixedPoint, jacksonDampingCoefficients
+from src.utils import normalizedChebyPolyFixedPoint, jacksonDampingCoefficients, jackson_poly_coeffs
 from src.optimizers import L1Solver
 from src.optimizers import cvxpyL1Solver
 from src.optimizers import pgdSolver
 from tqdm import tqdm
 
-def hutchMomentEstimator(A, N, l):
+def hutchMomentEstimator(A, N, l=1000, G=None):
     """
     implements algorithm 2 of https://arxiv.org/pdf/2104.03461.pdf
     """
     np.testing.assert_allclose(A, A.T)
     assert (N % 4 == 0)
     n = len(A)
-    G = 2*np.random.binomial(1, 0.5, size=(n, l)) - 1.0
+    if G is None:
+        G = 2*np.random.binomial(1, 0.5, size=(n, l)) - 1.0
     tau = np.zeros(N+1)
-    TAG0 = deepcopy(G)
-    # run the chebyshev series below
-    for k in range(N+1):
-        tau[k] = np.sum(np.multiply(G, TAG0))
-        if k == 0:
-            TAG1 = np.dot(A, G)
-        else:
-            TAG2 = 2*np.dot(A, TAG1) - TAG0
-            TAG0 = deepcopy(TAG1)
-            TAG1 = deepcopy(TAG2)
-        pass
+    Tkm2 = deepcopy(G)
+    Tkm1 = np.dot(A, G)
+    
+    tau[0] = np.sum(np.multiply(G, Tkm2))
+    tau[1] = np.sum(np.multiply(G, Tkm1))
+    
+    for k in range(2, N+1):
+        # necessary computations
+        Tk = 2*np.dot(A, Tkm1) - Tkm2
+        tau[k] = np.sum(np.multiply(G, Tk))
+        # set up for future iterations
+        Tkm2 = Tkm1
+        Tkm1 = Tk
+
     tau = tau[1:]
-    tau = tau * (np.sqrt(2/np.pi) / l*n)
+    tau = tau * (np.sqrt(2/np.pi) / (l*n))
     return tau
 
-def approxChebMomentMatching(tau, method="pgd"):
+def approxChebMomentMatching(tau, method="cvxpy"):
     """
     implements algorithm 1 of https://arxiv.org/pdf/2104.03461.pdf
     """
@@ -55,7 +59,7 @@ def approxChebMomentMatching(tau, method="pgd"):
 def discretizedJacksonDampedKPM(tau):
     """
     implements a discretization of algorithm 6 of https://arxiv.org/pdf/2104.03461.pdf
-    outputs a density function supported on [-1,1] in range \R^{>=0}
+    outputs a density function supported on [-1,1] in range \R^{0+}
     """
     N = len(tau)
     tau = np.insert(tau, 0, 1/np.sqrt(np.pi))
@@ -74,5 +78,5 @@ def discretizedJacksonDampedKPM(tau):
     coeffs = np.dot(b * tau, Tkbar.T)
     ws = np.ones(len(xs)) / np.sqrt(1 - xs**2)
     # q = (stilde + (w*sqrt(2)/(N*sqrt(pi)))) / (1+ sqrt(2pi)/N)
-    q = (ws * coeffs + ws*np.sqrt(2)/(N*np.sqrt(np.pi))) / (1 + np.sqrt(2*np.pi) / N)
+    q = (ws * coeffs + (ws*np.sqrt(2)/(N*np.sqrt(np.pi)))) / (1 + (np.sqrt(2*np.pi) / N))
     return xs, q

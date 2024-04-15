@@ -35,13 +35,13 @@ def write_pickle(data, pickle_file):
 
 
 def return_sbmgraph_filename(size, label=None):
-    fn = "data/sbm/sbm_size=%d" % (size)
+    fn = "matrices/sbm_size=%d" % (size)
     if label != None: return fn + "_" + label
     return fn
 
 
 def return_sbmgraph_object_filename(size, label=None):
-    fn = "data/sbm/sbm_object_size=%d" % (size)
+    fn = "matrices/sbm_object_size=%d" % (size)
     if label != None: return fn + "_" + label
     return fn
     # return "data/sbm/sbm_object_numComm=%d_comm_size=%d_comm_p=%3.2f_noncomm_p=%3.2f" % (num_communities, comm_size, comm_p, noncomm_p)
@@ -187,7 +187,7 @@ def write_sbmgraph(size, create_graph_fn, args,
 
 
 #Clique Plus Star Graph 
-# write_sbmgraph(1000, cliquePlusStar, [1000], label='cliquePlusStar', sparse=True, eigs=False)
+write_sbmgraph(1000, cliquePlusStar, [1000], label='cliquePlusStar', sparse=True, eigs=False)
 
 #hypercube graph 
 # write_sbmgraph(pow(2, 14), hypercube_graph, [14], eigs=False, label='hypercube_graph', sparse=True)

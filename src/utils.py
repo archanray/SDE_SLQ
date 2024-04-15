@@ -94,4 +94,16 @@ def jacksonDampingCoefficients(N):
     b = c[N:2*N+2]
     return b
 
+def jackson_poly_coeffs(deg):
+    """
+    code from Aditya
+    """
+    norm = (1./3)*(2*(deg/2. + 1)**3 + deg/2. + 1)
+    coeffs = np.zeros(deg + 1)
+    for k in range(deg + 1): 
+        a = (deg/2. + 1) - np.abs(np.arange(-deg/2. - 1, deg/2. + 1 - k + 1))
+        b = (deg/2. + 1) - np.abs(np.arange(-deg/2. - 1 + k, deg/2. + 1 - k + 1 + k))
+        coeffs[k] = (1./norm)*np.sum((a*b))
+    return coeffs
+
 # print(ChebyshevPolynomial(list(range(4)), 2).shape)

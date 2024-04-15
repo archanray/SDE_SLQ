@@ -12,7 +12,7 @@ import pandas as pd
 import pickle
 import time
 import csv
-# import sbm as sbm
+import sbm as sbm
 import pgd as pgd
 
 
@@ -798,12 +798,12 @@ def save_moments_csv(main_mat_fn, result_fns, labels, mesh_delta, title=""):
 
 # num = 1000
 # gfn = sbm.return_sbmgraph_object_filename(num, label='cliquePlusMatching')
-#40, 2, 85000 
+# 40, 2, 85000 
 
 
 
-# num = 1000
-# gfn = sbm.return_sbmgraph_object_filename(num, label='cliquePlusStar')
+num = 1000
+gfn = sbm.return_sbmgraph_object_filename(num, label='cliquePlusStar')
 #40, 2, 450 
 
 # num = pow(2, 14)
@@ -812,32 +812,31 @@ def save_moments_csv(main_mat_fn, result_fns, labels, mesh_delta, title=""):
 #80, 2, 11000, 0.025
 
 
-
-
 # mat_obj = MatrixObjectCSCSparse("ca-GrQc/ca-GrQc_graphRep_normAdjMat")
 # graph_list = ['cliquePlusMatching', 'cliquePlusStar', 'hypercube_graph']
-# graph_index = 0
+graph_list = ['cliquePlusStar']
+graph_index = 0
 
 
-# curr_graph = graph_list[graph_index]
+curr_graph = graph_list[graph_index]
 # num = [1000, 1000, pow(2, 14)][graph_index]
-# gfn = sbm.return_sbmgraph_object_filename(num, label=curr_graph)
+gfn = sbm.return_sbmgraph_object_filename(num, label=curr_graph)
 
-# sde_degree = 28 #Degree of chebyshev polynomial for sde
-# num_rand_vecs = 2  #Number of hutchinson's vecs
+sde_degree = 28 #Degree of chebyshev polynomial for sde
+num_rand_vecs = 2  #Number of hutchinson's vecs
 # cols_oversample_factor = 8000 #Scaling factor for col probabilities  
-# mesh_delta = 1e-5 #No need to change 
-# mm_mesh_delta = 1e-5
-# mm_mesh = np.arange(-1, 1+mm_mesh_delta, mm_mesh_delta)
+mesh_delta = 1e-5 #No need to change 
+mm_mesh_delta = 1e-5
+mm_mesh = np.arange(-1, 1+mm_mesh_delta, mm_mesh_delta)
 
 # exact_args = {'deg' : sde_degree, 'mesh':mm_mesh}
-# hutch_args = {'deg':sde_degree, 'num_random_vecs':num_rand_vecs,'mesh':mm_mesh}
+hutch_args = {'deg':sde_degree, 'num_random_vecs':num_rand_vecs,'mesh':mm_mesh}
 # approx_args = {'deg':sde_degree, 'num_random_vecs':num_rand_vecs,'mesh':mm_mesh,
 # 			'col_budget':cols_oversample_factor}
 
 
 # run_sde_experiment(gfn, 'exact_kpm', exact_args, mesh_delta)
-# run_sde_experiment(gfn, 'hutch_kpm', hutch_args, mesh_delta)
+run_sde_experiment(gfn, 'hutch_kpm', hutch_args, mesh_delta)
 # run_sde_experiment(gfn, 'approx_kpm', approx_args, mesh_delta)
 # run_sde_experiment(gfn, 'exact_mm', exact_args, mesh_delta)
 # run_sde_experiment(gfn, 'hutch_mm', hutch_args, mesh_delta)
@@ -848,7 +847,7 @@ def save_moments_csv(main_mat_fn, result_fns, labels, mesh_delta, title=""):
 # Result.get_result_filename(gfn, 'hutch_mm', hutch_args),
 # Result.get_result_filename(gfn, 'approx_mm', approx_args),
 # Result.get_result_filename(gfn, 'exact_kpm', exact_args),
-# Result.get_result_filename(gfn, 'hutch_kpm', hutch_args),
+Result.get_result_filename(gfn, 'hutch_kpm', hutch_args),
 # Result.get_result_filename(gfn, 'approx_kpm', approx_args)]
 
 # labels = ["MM", "KPM"]
