@@ -4,35 +4,14 @@ from src.lanczos import modified_lanczos
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import os
-from src.moment_estimator import approxChebMomentMatching, discretizedJacksonDampedKPM, hutchMomentEstimator
+from src.moment_estimator import approxChebMomentMatching, discretizedJacksonDampedKPM, hutchMomentEstimator, baselineHutch, baselineKPM, baselineCMM
 from src.utils import Wasserstein, jacksonDampingCoefficients, jackson_poly_coeffs
 from src.distribution import Distribution
 from src.optimizers import cvxpyL1Solver
 from src.optimizers import pgdSolver
 from src.get_dataset import get_data
 import scipy as sp
-
-
-def baselineHutch(data, deg, rand_vecs, l=1000):
-    """
-    code adapted from Aditya
-    """
-    num_rand_vecs = l
-    n = len(data)
-    moments = np.zeros(deg + 1)
-    # rand_vecs = 2*np.random.binomial(1, 0.5, size=(n, num_rand_vecs)) - 1
-    v_iminus1 = rand_vecs
-    v_i = np.dot(data, rand_vecs)
-    
-    moments[0] = np.trace(np.matmul(rand_vecs.T, v_iminus1))/(n*num_rand_vecs)
-    moments[1] = np.trace(np.matmul(rand_vecs.T, v_i))/(n*num_rand_vecs)
-    for i in range(2, deg + 1):
-        temp = v_i
-        matmul_vec = np.dot(data, v_i)
-        v_i = 2*matmul_vec - v_iminus1
-        v_iminus1 = temp
-        moments[i] = np.trace(np.matmul(rand_vecs.T, v_i))/(n*num_rand_vecs)
-    return moments * np.sqrt(2/np.pi)
+import numpy.polynomial as poly
 
 class TestCalculations:
     def checkWasserstein(self):
@@ -227,19 +206,23 @@ class TestCalculations:
     
     def sdeComputer(self, data, degree, method = "CMM"):
         if method == "CMM":
-            tau = hutchMomentEstimator(data, degree, degree)
+            tau = hutchMomentEstimator(data, degree, 5)
             supports, q = approxChebMomentMatching(tau, method="cvxpy")
             return supports, q
         if method == "KPM":
-            tau = hutchMomentEstimator(data, degree, degree)
+            tau = hutchMomentEstimator(data, degree, 5)
             supports, q = discretizedJacksonDampedKPM(tau)
             return supports, q
+        if method == "baseline_KPM":
+            return baselineKPM(data, degree, 5)
+        if method == "baseline_CMM":
+            return baselineCMM(data, degree, 5)
         return None
     
     def checkSDEApproxError(self, data, moments, support_true, method="CMM"):
         trials = 10
-        quantile_lo = 25
-        quantile_hi = 75
+        quantile_lo = 10
+        quantile_hi = 90
         errors = np.zeros((trials,len(moments)))
         pdf_true = np.ones_like(support_true) / len(support_true)
         
@@ -259,7 +242,7 @@ class TestCalculations:
         dataset = "uniform"
         data, n = get_data(dataset)
         support_true = np.real(np.linalg.eigvals(data))
-        methods = ["CMM", "KPM"]
+        methods = ["baseline_KPM", "baseline_CMM"]#["CMM", "KPM", "baseline_KPM", "baseline_CMM"]
         moments = list(range(4,60,4))
         
         for i in range(len(methods)):
@@ -272,10 +255,10 @@ class TestCalculations:
         plt.savefig("figures/unittests/SDE_approximation_error_"+dataset+".pdf", bbox_inches='tight', dpi=200)
         
     def checkJacksonPolynomial(self):
-        deg = 20
+        deg = 8
         print("J-Polys Here:", jacksonDampingCoefficients(deg))
         print("J-Polys BLin:", jackson_poly_coeffs(deg))
         return None
-                
+
 if __name__ == '__main__':
-    TestCalculations().checkJacksonPolynomial()
+    TestCalculations().checkHutch()

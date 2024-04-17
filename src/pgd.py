@@ -1,5 +1,9 @@
 import numpy as np
 
+"""
+code from Aditya Krishnan
+"""
+
 def func_l1(x, A, b): 
     return  np.linalg.norm(A.dot(x) - b, ord=1)
 

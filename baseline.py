@@ -437,14 +437,14 @@ def compute_sde_hutch_kpm(mat_obj, args):
     target_deg, num_rand_vecs = args['deg'], args['num_random_vecs']
     moment_fn_hutch = create_hutch_moment_fn(mat_obj, num_rand_vecs)
     add = math.sqrt(2/math.pi)*(1/target_deg)
-    scaling = (1 + math.sqrt(2*math.pi)*(1/target_deg))	
+    scaling = (1 + math.sqrt(2*math.pi)*(1/target_deg))
     return sde_rep_kpm(target_deg, moment_fn_hutch, add, scaling)
 
 def compute_sde_hutchApprox_kpm(mat_obj, args): 
     target_deg, num_rand_vecs, col_budget = args['deg'], args['num_random_vecs'], args['col_budget']
     moment_fn_hutchApprox = create_approxHutch_moment_fn(mat_obj, num_rand_vecs, col_budget)
     add = math.sqrt(2/math.pi)*(1/target_deg)
-    scaling = (1 + math.sqrt(2*math.pi)*(1/target_deg))	
+    scaling = (1 + math.sqrt(2*math.pi)*(1/target_deg))
     rep, sparsity, moments = sde_rep_kpm(target_deg, moment_fn_hutchApprox, add, scaling)
 
     mesh_delta = 1e-5
@@ -530,6 +530,7 @@ cdf_func_list = [cdf_fromRep_kpm, cdf_fromRep_kpm, cdf_fromRep_kpm,
 def run_sde_experiment(mat_filename, sde_type, args, mesh_size, num_trials=1):
     print("Running on %s with args="%(mat_filename), args)
     
+    print("Mesh size:", mesh_size)
     result = Result(mat_filename, sde_type, args)
     mat_obj = load_pickle(mat_filename)
     # mesh = np.arange(-1+mesh_delta, 1-mesh_delta, mesh_delta)
@@ -802,8 +803,8 @@ def save_moments_csv(main_mat_fn, result_fns, labels, mesh_delta, title=""):
 
 
 
-num = 1000
-gfn = sbm.return_sbmgraph_object_filename(num, label='cliquePlusStar')
+# num = 1000
+# gfn = sbm.return_sbmgraph_object_filename(num, label='cliquePlusStar')
 #40, 2, 450 
 
 # num = pow(2, 14)
@@ -819,7 +820,7 @@ graph_index = 0
 
 
 curr_graph = graph_list[graph_index]
-# num = [1000, 1000, pow(2, 14)][graph_index]
+num = [1000, 1000, pow(2, 14)][graph_index]
 gfn = sbm.return_sbmgraph_object_filename(num, label=curr_graph)
 
 sde_degree = 28 #Degree of chebyshev polynomial for sde
