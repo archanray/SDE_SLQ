@@ -44,12 +44,19 @@ def approxChebMomentMatching(tau, method="cvxpy"):
     N = len(tau)
     nIntegers = np.array(list(range(1,N+1)))
     z = np.divide(tau, nIntegers)
-    d = 100#int(np.ceil(N**3 / 2))
-    xs = -1.0 + (2*np.array(list(range(1,d+1)), dtype=tau.dtype) / d)
-    Tkbar = np.zeros((N, d))
-    for i in range(d):
-        Tkbar[:, i] = normalizedChebyPolyFixedPoint(xs[i], N)
-    TNd = np.divide(Tkbar, nIntegers.reshape(-1,1))
+    d = int(np.ceil(N**3 / 2))
+    xs = np.linspace(-1,1,num=d+1,endpoint=True)
+    # Tkbar = np.zeros((N, d+1))
+    # for i in range(d+1):
+    #     Tkbar[:, i] = normalizedChebyPolyFixedPoint(xs[i], N)
+    # TNd = np.divide(Tkbar, nIntegers.reshape(-1,1))
+    TNd = np.zeros((N+1, d+1))
+    for k in range(1,N+1):
+        a = np.zeros(N+1)
+        a[k] = 1
+        TNd[k, :] = poly.chebyshev.chebval(xs, a)/(max(1,k)*np.pi)
+    TNd = 2*TNd[1:,:]
+            
     if method == "cvxpy":
         solver = cvxpyL1Solver(TNd, z)
     if method == "pgd":
@@ -146,9 +153,15 @@ def baselineCMM(data, target_deg, num_rand_vecs = 5):
     
     solver = cvxpyL1Solver(scaled_moment_matrix, scaled_moments)
     solver.minimizer()
-    res = solver.res.x
     
-    grid_size = len(res)
+    # x0 = np.zeros(len(cheb_mesh))
+    # x0[-1] = 1.
+    # res = solve_fw(lambda x : pgd.func_l1(x, scaled_moment_matrix, scaled_moments), 
+    #             lambda x: pgd.grad_l1(x, scaled_moment_matrix, scaled_moments), 
+    #             pgd.simplex_FW_linsolver, x0, max_iter=100000)
+    
+    
+    grid_size = len(solver.res.x)
     grid = np.linspace(-1, 1, num=grid_size, endpoint=True)
     
-    return grid, res
+    return grid, solver.res.x

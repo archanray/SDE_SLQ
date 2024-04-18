@@ -12,8 +12,44 @@ from src.optimizers import pgdSolver
 from src.get_dataset import get_data
 import scipy as sp
 import numpy.polynomial as poly
+from src.utils import normalizedChebyPolyFixedPoint
+import time
 
 class TestCalculations:
+    def checkChebyshevMatrices(self):
+        N = 50
+        nIntegers = np.array(list(range(1,N+1)))
+        d = 1000
+        xs = np.linspace(-1,1,num=d+1,endpoint=True)
+        Tkbar = np.zeros((N, d+1))
+        # TNd = np.vstack([np.pi*np.ones(d+1), Tkbar])
+        
+        st1 = time.time()
+        for j in range(100):
+            for i in range(d+1):
+                Tkbar[:, i] = normalizedChebyPolyFixedPoint(xs[i], N)
+            TNd = np.divide(Tkbar, nIntegers.reshape(-1,1))
+        et1 = time.time()
+        # print("TNd:\n",TNd)
+        
+        scaled_moment_matrix = np.zeros((N, len(xs)))
+        st2 = time.time()
+        for i in range(100):
+            for d in range(1,N + 1): 
+                a = np.zeros(N + 1)
+                a[d] = 1 
+                scaled_moment_matrix[d-1, :] = 2*poly.chebyshev.chebval(xs, a)/(max(1,d)*np.pi)
+        et2 = time.time()
+        
+        # print("scaled_moment_matrix:\n",scaled_moment_matrix)
+        
+        if np.linalg.norm(TNd - scaled_moment_matrix) <= 1e-14:
+            print("True")
+            print("Total time for method1:", et1-st1, "\nTotal time for method2:", et2-st2)
+        else:
+            print("False")
+        return None    
+        
     def checkWasserstein(self):
         v1 = [0, 1, 3]
         p1 = [0.5, 0.4, 0.1]
@@ -239,10 +275,10 @@ class TestCalculations:
         return errors_mean, errors_lo, errors_hi
     
     def runSDEexperiments(self):
-        dataset = "uniform"
+        dataset = "gaussian"
         data, n = get_data(dataset)
         support_true = np.real(np.linalg.eigvals(data))
-        methods = ["baseline_KPM", "baseline_CMM"]#["CMM", "KPM", "baseline_KPM", "baseline_CMM"]
+        methods = ["baseline_KPM", "CMM"] #["CMM", "KPM", "baseline_KPM", "baseline_CMM"]
         moments = list(range(4,60,4))
         
         for i in range(len(methods)):
@@ -261,4 +297,4 @@ class TestCalculations:
         return None
 
 if __name__ == '__main__':
-    TestCalculations().checkHutch()
+    TestCalculations().runSDEexperiments()
