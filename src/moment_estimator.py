@@ -37,19 +37,18 @@ def hutchMomentEstimator(A, N, l=1000, G=None):
     tau = tau * (np.sqrt(2/np.pi) / (l*n))
     return tau
 
-def approxChebMomentMatching(tau, method="cvxpy"):
+def approxChebMomentMatching(tau, method="cvxpy",cheb_vals=None):
     """
     implements algorithm 1 of https://arxiv.org/pdf/2104.03461.pdf
     """
     N = len(tau)
     nIntegers = np.array(list(range(1,N+1)))
     z = np.divide(tau, nIntegers)
-    d = int(np.ceil(N**3 / 2))
+    if cheb_vals is None:
+        d = int(np.ceil(N**3 / 2))
+    else:
+        d = cheb_vals
     xs = np.linspace(-1,1,num=d+1,endpoint=True)
-    # Tkbar = np.zeros((N, d+1))
-    # for i in range(d+1):
-    #     Tkbar[:, i] = normalizedChebyPolyFixedPoint(xs[i], N)
-    # TNd = np.divide(Tkbar, nIntegers.reshape(-1,1))
     TNd = np.zeros((N+1, d+1))
     for k in range(1,N+1):
         a = np.zeros(N+1)
