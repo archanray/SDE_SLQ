@@ -2,6 +2,9 @@ import numpy as np
 from random import sample
 import os
 from scipy.stats import ortho_group
+import scipy.io
+import urllib.request
+from scipy.sparse import csr_matrix
 
 def normalize_adj_sym(adj_mat):
     """
@@ -79,5 +82,24 @@ def get_data(name, seed=1):
             with open(file_path, "wb") as f:
                 np.save(f, data)
             return data, n
+        
+        if name == "erdos992":
+            """
+            as described in https://arxiv.org/pdf/2104.03461.pdf
+            file download instructions:
+            `wget https://suitesparse-collection-website.herokuapp.com/mat/Pajek/Erdos992.mat ./`
+            """
+            fname = "matrices/Erdos992.mat"
+            if os.path.isfile(fname):
+                mat = scipy.io.loadmat('matrices/Erdos992.mat')
+            else:
+                urllib.request.urlretrieve("https://suitesparse-collection-website.herokuapp.com/mat/Pajek/Erdos992.mat", fname)
+                mat = scipy.io.loadmat('matrices/Erdos992.mat')
+                pass
+            data = mat["Problem"][0][0][2].todense()
+            data = data / np.linalg.norm(data, ord=2)
+            return data, len(data)
             
     return dataset, dataset_size
+
+# get_data(name="erdos992")

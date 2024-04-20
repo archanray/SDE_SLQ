@@ -14,8 +14,16 @@ import scipy as sp
 import numpy.polynomial as poly
 from src.utils import normalizedChebyPolyFixedPoint
 import time
+from src.optimizers import pgdSolver
 
 class TestCalculations:
+    def checkProjection(self):
+        solver = pgdSolver()
+        x = np.random.randn(5)
+        xd = solver.proj_simplex_array(x)
+        print("sum xd", np.sum(xd), "\nxd:", xd)
+        return None
+    
     def checkChebyshevMatrices(self):
         N = 50
         nIntegers = np.array(list(range(1,N+1)))
@@ -65,18 +73,18 @@ class TestCalculations:
     
     def checkL1Optimizer(self):
         N = 50
-        d = 10000 #int(N**3/ 2)
+        d = 5000 #int(N**3/ 2)
         T = np.random.randn(N, d)
         z = np.random.rand(N)
         z = z/np.sum(z)
         
         solver1 = cvxpyL1Solver(T, z)
         solver1.minimizer()
-        print("smallest value achieved using optimize.linprog:", solver1.res.fun)
+        print("smallest value achieved using optimize.linprog:", solver1.res.fun, np.linalg.norm(T@solver1.res.x - z,1))
         print("sum q values:", np.sum(solver1.res.x))
         
         solver2 = pgdSolver(T, z)
-        solver2.minimizer()
+        solver2.minimizer(plot=True)
         print("smallest value achieved using optimize.minimize:", solver2.res.fun)
         print("sum q values:", np.sum(solver2.res.x))
         
@@ -240,10 +248,11 @@ class TestCalculations:
         print(tau_here, "\n", tau_baseline)
         return None
     
-    def sdeComputer(self, data, degree, method = "CMM", cheb_vals=None):
+    def sdeComputer(self, data, degree, method = "CMM", cheb_vals=None, submethod="cvxpy"):
         if method == "CMM":
             tau = hutchMomentEstimator(data, degree, 5)
-            supports, q = approxChebMomentMatching(tau, method="cvxpy", cheb_vals=cheb_vals)
+            supports, q = approxChebMomentMatching(tau, method=submethod, cheb_vals=cheb_vals)
+            # print(supports, q)
             return supports, q
         if method == "KPM":
             tau = hutchMomentEstimator(data, degree, 5)
@@ -255,8 +264,7 @@ class TestCalculations:
             return baselineCMM(data, degree, 5)
         return None
     
-    def checkSDEApproxError(self, data, moments, support_true, method="CMM", cheb_vals=None):
-        trials = 3
+    def checkSDEApproxError(self, data, moments, support_true, method="CMM", cheb_vals=1000, trials=5, submethod="cvxpy"):
         quantile_lo = 10
         quantile_hi = 90
         errors = np.zeros((trials,len(moments)))
@@ -264,7 +272,8 @@ class TestCalculations:
         
         for t in tqdm(range(trials)):
             for j in range(len(moments)):
-                support_current, pdf_current = self.sdeComputer(data, moments[j], method = method, cheb_vals = cheb_vals)
+                # print(submethod)
+                support_current, pdf_current = self.sdeComputer(data, moments[j], method = method, cheb_vals = cheb_vals, submethod=submethod)
                 errors[t,j] = sp.stats.wasserstein_distance(support_true, support_current, pdf_true, pdf_current)
             pass
         
@@ -275,23 +284,25 @@ class TestCalculations:
         return errors_mean, errors_lo, errors_hi
     
     def runSDEexperiments(self):
-        dataset = "gaussian"
+        dataset = "erdos992"
         data, n = get_data(dataset)
         support_true = np.real(np.linalg.eigvals(data))
         methods = ["baseline_KPM", "CMM"] #["CMM", "KPM", "baseline_KPM", "baseline_CMM"]
         moments = list(range(4,60,4))
         
         for i in range(len(methods)):
-            errors_mean, errors_lo, errors_hi = self.checkSDEApproxError(data, moments, support_true, method=methods[i])
+            errors_mean, errors_lo, errors_hi = self.checkSDEApproxError(data, moments, support_true, method=methods[i], cheb_vals=5000)
             
             plt.plot(moments, errors_mean, label=methods[i])
             plt.fill_between(moments, errors_lo, errors_hi, alpha=0.2)
         
         plt.legend()
+        plt.ylabel("Wasserstein error")
+        plt.xlabel("Moments")
         plt.savefig("figures/unittests/SDE_approximation_error_"+dataset+".pdf", bbox_inches='tight', dpi=200)
     
     def checkChebValNums(self):
-        values = np.arange(500,3000,500)
+        values = [1000]#np.arange(500,3000,500)
         dataset = "gaussian"
         data, n = get_data(dataset)
         support_true = np.real(np.linalg.eigvals(data))
@@ -312,6 +323,24 @@ class TestCalculations:
         print("J-Polys Here:", jacksonDampingCoefficients(deg))
         print("J-Polys BLin:", jackson_poly_coeffs(deg))
         return None
+    
+    def checkChebyshevOptimizers(self):
+        dataset = "gaussian"
+        data, n = get_data(dataset)
+        support_true = np.real(np.linalg.eigvals(data))
+        moments = list(range(4,60,4))
+        algo = ["cvxpy", "pgd"]
+        
+        for i in range(len(algo)):
+            errors_mean, errors_lo, errors_hi = self.checkSDEApproxError(data, moments, support_true, method="CMM", trials=3, cheb_vals=500, submethod=algo[i])
+            
+            plt.plot(moments, errors_mean, label=str(algo[i]))
+            plt.fill_between(moments, errors_lo, errors_hi, alpha=0.2)
+        
+        plt.legend()
+        plt.savefig("figures/unittests/CMM_variations_with_optimizer_"+dataset+".pdf", bbox_inches='tight', dpi=200)
+            
+        return None
 
 if __name__ == '__main__':
-    TestCalculations().checkChebValNums()
+    TestCalculations().runSDEexperiments()

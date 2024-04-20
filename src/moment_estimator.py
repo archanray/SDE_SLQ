@@ -53,8 +53,8 @@ def approxChebMomentMatching(tau, method="cvxpy",cheb_vals=None):
     for k in range(1,N+1):
         a = np.zeros(N+1)
         a[k] = 1
-        TNd[k, :] = poly.chebyshev.chebval(xs, a)/(max(1,k)*np.pi)
-    TNd = 2*TNd[1:,:]
+        TNd[k, :] = poly.chebyshev.chebval(xs, a)/(max(1,k)*np.sqrt(np.pi))
+    TNd = np.sqrt(2)*TNd[1:,:]
             
     if method == "cvxpy":
         solver = cvxpyL1Solver(TNd, z)
