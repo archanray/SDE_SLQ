@@ -98,6 +98,9 @@ def get_data(name, seed=1):
                 pass
             data = mat["Problem"][0][0][2].todense()
             data = data / np.linalg.norm(data, ord=2)
+            
+            with open(file_path, "wb") as f:
+                np.save(f, data)
             return data, len(data)
             
     return dataset, dataset_size

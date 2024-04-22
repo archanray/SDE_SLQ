@@ -4,7 +4,7 @@ from src.lanczos import modified_lanczos
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import os
-from src.moment_estimator import approxChebMomentMatching, discretizedJacksonDampedKPM, hutchMomentEstimator, baselineHutch, baselineKPM, baselineCMM
+from src.moment_estimator import approxChebMomentMatching, discretizedJacksonDampedKPM, hutchMomentEstimator, baselineHutch, baselineKPM, baselineCMM, exactCMM
 from src.utils import Wasserstein, jacksonDampingCoefficients, jackson_poly_coeffs
 from src.distribution import Distribution
 from src.optimizers import cvxpyL1Solver
@@ -262,6 +262,8 @@ class TestCalculations:
             return baselineKPM(data, degree, 5)
         if method == "baseline_CMM":
             return baselineCMM(data, degree, 5)
+        if method == "exact_CMM":
+            return exactCMM(data, degree, 5)
         return None
     
     def checkSDEApproxError(self, data, moments, support_true, method="CMM", cheb_vals=1000, trials=5, submethod="cvxpy"):
@@ -287,7 +289,7 @@ class TestCalculations:
         dataset = "erdos992"
         data, n = get_data(dataset)
         support_true = np.real(np.linalg.eigvals(data))
-        methods = ["baseline_KPM", "CMM"] #["CMM", "KPM", "baseline_KPM", "baseline_CMM"]
+        methods = ["baseline_KPM", "CMM"] #["CMM", "KPM", "baseline_KPM", "baseline_CMM", "exact_CMM"]
         moments = list(range(4,60,4))
         
         for i in range(len(methods)):

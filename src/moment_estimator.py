@@ -8,6 +8,7 @@ from tqdm import tqdm
 import math
 import numpy.polynomial as poly
 import src.pgd as pgd
+from src.lanczos import naive_lanczos
 
 def hutchMomentEstimator(A, N, l=1000, G=None):
     """
@@ -164,3 +165,24 @@ def baselineCMM(data, target_deg, num_rand_vecs = 5):
     grid = np.linspace(-1, 1, num=grid_size, endpoint=True)
     
     return grid, solver.res.x
+
+def exactCMM(data, degrees, cheb_vals=5):
+    xs, _ = np.linalg.eig(data)
+    xs = np.real(xs)
+    n = len(data)
+    vm2 = np.ones(n) 
+    vm1 = xs
+    moments = np.zeros(n+1)
+    moments[0] = np.sum(vm2)/n
+    moments[1] = np.sum(vm1)/n
+    for i in range(2, degrees + 1): 
+        temp = vm1
+        vm1 = 2*(xs*vm1) - vm2
+        vm2 = temp
+        moments[i] = np.sum(vm1)/n
+    tau = moments[1:]
+    xs, pdf = approxChebMomentMatching(tau, cheb_vals=cheb_vals)
+    return xs, pdf
+
+def SLQMM(data, degrees):
+    return None
