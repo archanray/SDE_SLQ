@@ -15,6 +15,7 @@ import numpy.polynomial as poly
 from src.utils import normalizedChebyPolyFixedPoint
 import time
 from src.optimizers import pgdSolver
+import numpy.polynomial as poly
 
 class TestCalculations:
     def checkProjection(self):
@@ -248,7 +249,7 @@ class TestCalculations:
         print(tau_here, "\n", tau_baseline)
         return None
     
-    def sdeComputer(self, data, degree, method = "CMM", cheb_vals=None, submethod="cvxpy"):
+    def sdeComputer(self, data, degree, method = "CMM", cheb_vals=None, submethod="cvxpy", eigvals=None):
         if method == "CMM":
             tau = hutchMomentEstimator(data, degree, 5)
             supports, q = approxChebMomentMatching(tau, method=submethod, cheb_vals=cheb_vals)
@@ -261,9 +262,9 @@ class TestCalculations:
         if method == "baseline_KPM":
             return baselineKPM(data, degree, 5)
         if method == "baseline_CMM":
-            return baselineCMM(data, degree, 5)
+            return baselineCMM(data, degree, cheb_vals)
         if method == "exact_CMM":
-            return exactCMM(data, degree, 5)
+            return exactCMM(data, eigvals, degree, cheb_vals)
         return None
     
     def checkSDEApproxError(self, data, moments, support_true, method="CMM", cheb_vals=1000, trials=5, submethod="cvxpy"):
@@ -271,11 +272,12 @@ class TestCalculations:
         quantile_hi = 90
         errors = np.zeros((trials,len(moments)))
         pdf_true = np.ones_like(support_true) / len(support_true)
+        eigvals = np.real(np.linalg.eigvals(data))
         
         for t in tqdm(range(trials)):
             for j in range(len(moments)):
-                # print(submethod)
-                support_current, pdf_current = self.sdeComputer(data, moments[j], method = method, cheb_vals = cheb_vals, submethod=submethod)
+                # print(method)
+                support_current, pdf_current = self.sdeComputer(data, moments[j], method = method, cheb_vals = cheb_vals, submethod=submethod, eigvals=eigvals)
                 errors[t,j] = sp.stats.wasserstein_distance(support_true, support_current, pdf_true, pdf_current)
             pass
         
@@ -286,10 +288,10 @@ class TestCalculations:
         return errors_mean, errors_lo, errors_hi
     
     def runSDEexperiments(self):
-        dataset = "erdos992"
+        dataset = "gaussian"
         data, n = get_data(dataset)
         support_true = np.real(np.linalg.eigvals(data))
-        methods = ["baseline_KPM", "CMM"] #["CMM", "KPM", "baseline_KPM", "baseline_CMM", "exact_CMM"]
+        methods = ["CMM", "exact_CMM"] #["CMM", "KPM", "baseline_KPM", "baseline_CMM", "exact_CMM"]
         moments = list(range(4,60,4))
         
         for i in range(len(methods)):
@@ -301,7 +303,7 @@ class TestCalculations:
         plt.legend()
         plt.ylabel("Wasserstein error")
         plt.xlabel("Moments")
-        plt.savefig("figures/unittests/SDE_approximation_error_"+dataset+".pdf", bbox_inches='tight', dpi=200)
+        plt.savefig("figures/unittests/SDE_approximation_error_"+dataset+"_test.pdf", bbox_inches='tight', dpi=200)
     
     def checkChebValNums(self):
         values = [1000]#np.arange(500,3000,500)

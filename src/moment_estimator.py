@@ -166,23 +166,17 @@ def baselineCMM(data, target_deg, num_rand_vecs = 5):
     
     return grid, solver.res.x
 
-def exactCMM(data, degrees, cheb_vals=5):
-    xs, _ = np.linalg.eig(data)
-    xs = np.real(xs)
+def exactCMM(data, eigvals, degree, cheb_vals=5):
     n = len(data)
-    vm2 = np.ones(n) 
-    vm1 = xs
-    moments = np.zeros(n+1)
-    moments[0] = np.sum(vm2)/n
-    moments[1] = np.sum(vm1)/n
-    for i in range(2, degrees + 1): 
-        temp = vm1
-        vm1 = 2*(xs*vm1) - vm2
-        vm2 = temp
-        moments[i] = np.sum(vm1)/n
-    tau = moments[1:]
-    xs, pdf = approxChebMomentMatching(tau, cheb_vals=cheb_vals)
-    return xs, pdf
+    moments = np.zeros(degree)
+    signal = np.zeros(degree+1).astype(float)
+    for d in range(1, degree+1):
+        signal[d] = 1.0
+        moments[d-1] = (np.sum(poly.chebyshev.chebval(eigvals, signal)) / n) / np.sqrt(np.pi / 2)
+        signal[d] = 0.0
+        pass
+    support, pdf_vals = approxChebMomentMatching(moments, cheb_vals=cheb_vals)
+    return support, pdf_vals
 
 def SLQMM(data, degrees):
     return None
