@@ -17,7 +17,63 @@ import time
 from src.optimizers import pgdSolver
 import numpy.polynomial as poly
 
+def findMaxIndex(L1):
+    if np.abs(L1[-1]) > np.abs(L1[0]):
+        return -1
+    else:
+        return 0
+    
+
 class TestCalculations:
+    def checkLanczosConvergence(self):
+        trials = 5
+        n = 500
+        iterations = np.arange(4,104,4)
+        error1 = np.zeros((trials, len(iterations)))
+        error2 = np.zeros_like(error1)
+        # print(error1.shape)
+        
+        for t in tqdm(range(trials)):
+            # in each trial init the matrix first
+            data = np.random.randn(n, n)
+            data /= np.linalg.norm(data, ord=2)
+            true_lambda, true_vecs = np.linalg.eig(data)
+            index = findMaxIndex(true_lambda)
+            
+            for q in range(len(iterations)):
+                rand_vecs = np.random.randn(n)
+                rand_vecs /= np.linalg.norm(rand_vecs)
+                Q, T = modified_lanczos(data, rand_vecs, iterations[q], return_type="Q and T")
+                
+                local_lambda, local_vecs = np.linalg.eig(T)
+                error1[t, q] = np.abs(true_lambda[index] - local_lambda[index])
+                Z_i = np.dot(Q, local_vecs[:,index].T)
+                L_iZ_i = local_lambda[index] * Z_i
+                AZ_i = np.dot(data, Z_i.T)
+                error2[t, q] = np.linalg.norm(L_iZ_i - AZ_i)
+            pass
+        mean_error1 = np.mean(error1, axis=0)
+        p20_error1 = np.percentile(error1, axis=0, q=20)
+        p80_error1 = np.percentile(error1, axis=0, q=80)
+        # print(mean_error1.shape, iterations.shape, p20_error1.shape, p80_error1.shape)
+        mean_error2 = np.mean(error2, axis=0)
+        p20_error2 = np.percentile(error2, axis=0, q=20)
+        p80_error2 = np.percentile(error2, axis=0, q=80)
+        
+        plt.plot(iterations, mean_error1)
+        plt.fill_between(iterations, p20_error1, p80_error1, alpha=0.3)
+        plt.xlabel("iterations")
+        plt.ylabel("abs error")
+        plt.savefig("figures/unittests/lanczosErrorAbs.pdf", bbox_inches='tight',dpi=200)
+        plt.close()
+        
+        plt.plot(iterations, mean_error2)
+        plt.fill_between(iterations, p20_error2, p80_error2, alpha=0.3)
+        plt.xlabel("iterations")
+        plt.ylabel(r"$\ell_2$"+" error")
+        plt.savefig("figures/unittests/lanczosErrorL2.pdf", bbox_inches='tight',dpi=200)
+        plt.close()
+        return None
     def checkCalculation(self):
         A = np.random.randn(10,10)
         A = (A+A.T) / 2
@@ -367,4 +423,4 @@ class TestCalculations:
         return None
 
 if __name__ == '__main__':
-    TestCalculations().runSDEexperiments()
+    TestCalculations().checkLanczosConvergence()
