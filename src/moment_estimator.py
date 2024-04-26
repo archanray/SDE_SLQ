@@ -8,7 +8,13 @@ from tqdm import tqdm
 import math
 import numpy.polynomial as poly
 import src.pgd as pgd
-from src.lanczos import naive_lanczos
+from src.lanczos import modified_lanczos
+from src.distribution import Distribution, mergeDistributions
+
+def adder(l):
+    def valCal(v1, v2):
+        return v1+(v2/l)
+    return valCal
 
 def hutchMomentEstimator(A, N, l=1000, G=None):
     """
@@ -178,5 +184,18 @@ def exactCMM(data, eigvals, degree, cheb_vals=5):
     support, pdf_vals = approxChebMomentMatching(moments, cheb_vals=cheb_vals)
     return support, pdf_vals
 
-def SLQMM(data, degrees):
-    return None
+def SLQMM(data, k, nv):
+    n = len(data)
+    # draw random vecs from the surface of a unit sphere
+    V = np.random.randn(n,nv)
+    V /= np.linalg.norm(V, axis=0)
+    outputDistro = Distribution()
+    for i in range(nv):
+        T = modified_lanczos(data, V[:, i], k)
+        Lambda, Vectors = np.linalg.eig(T)
+        VVT = np.dot(Vectors, Vectors.T)
+        weights = np.sum(VVT, axis=1) #/ float(k) # sum along columns of VV^T
+        localDistro = Distribution(Lambda, weights)
+        
+        outputDistro = mergeDistributions(outputDistro, localDistro, func=adder(nv))
+    return np.array(list(outputDistro.support.keys())), np.array(list(outputDistro.support.values()))

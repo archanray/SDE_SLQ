@@ -4,7 +4,7 @@ from src.lanczos import modified_lanczos
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import os
-from src.moment_estimator import approxChebMomentMatching, discretizedJacksonDampedKPM, hutchMomentEstimator, baselineHutch, baselineKPM, baselineCMM, exactCMM
+from src.moment_estimator import approxChebMomentMatching, discretizedJacksonDampedKPM, hutchMomentEstimator, baselineHutch, baselineKPM, baselineCMM, exactCMM, SLQMM
 from src.utils import Wasserstein, jacksonDampingCoefficients, jackson_poly_coeffs
 from src.distribution import Distribution
 from src.optimizers import cvxpyL1Solver
@@ -265,6 +265,8 @@ class TestCalculations:
             return baselineCMM(data, degree, cheb_vals)
         if method == "exact_CMM":
             return exactCMM(data, eigvals, degree, cheb_vals)
+        if method == "SLQMM":
+            return SLQMM(data, degree, 5)
         return None
     
     def checkSDEApproxError(self, data, moments, support_true, method="CMM", cheb_vals=1000, trials=5, submethod="cvxpy"):
@@ -291,7 +293,7 @@ class TestCalculations:
         dataset = "gaussian"
         data, n = get_data(dataset)
         support_true = np.real(np.linalg.eigvals(data))
-        methods = ["CMM", "exact_CMM"] #["CMM", "KPM", "baseline_KPM", "baseline_CMM", "exact_CMM"]
+        methods = ["SLQMM", "CMM", "baseline_KPM"] #["CMM", "KPM", "baseline_KPM", "baseline_CMM", "exact_CMM"]
         moments = list(range(4,60,4))
         
         for i in range(len(methods)):
@@ -302,7 +304,10 @@ class TestCalculations:
         
         plt.legend()
         plt.ylabel("Wasserstein error")
+        plt.yscale('log')
         plt.xlabel("Moments")
+        plt.yticks([10**0, 10**(-1), 10**(-2), 10**(-3)])
+        plt.grid()
         plt.savefig("figures/unittests/SDE_approximation_error_"+dataset+"_test.pdf", bbox_inches='tight', dpi=200)
     
     def checkChebValNums(self):

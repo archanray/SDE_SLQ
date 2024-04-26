@@ -33,7 +33,8 @@ def slq(A, k, l, seed=0):
         T = lanczos(A, g, k) # T is a kxk matrix
         
         L, V = np.linalg.eig(T)
-        weights = np.square(V[0,:]) / k # dividing by k to have the values normalized
+        VVT = np.dot(V, V.T)
+        weights = np.sum(VVT, axis=1)
         localDistro = Distribution(L, weights)
         
         outputDistro = mergeDistributions(outputDistro, localDistro, func=adder(l))
