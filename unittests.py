@@ -18,6 +18,21 @@ from src.optimizers import pgdSolver
 import numpy.polynomial as poly
 
 class TestCalculations:
+    def checkCalculation(self):
+        A = np.random.randn(10,10)
+        A = (A+A.T) / 2
+        L, V = np.linalg.eig(A)
+        VVT = np.dot(V, V.T)
+        support = L
+        weights1 = np.sum(VVT, axis=1)
+        weights2 = np.zeros_like(support)
+        for i in range(len(L)):
+            weights2[i] = np.outer(V[:,i], V[:,i])[0,0]
+        print("weights1:", weights1, "\nweights2:", weights2)
+        print("sum of weights2:", np.sum(weights2))
+        print("VVT:\n", VVT)
+        return None
+    
     def checkProjection(self):
         solver = pgdSolver()
         x = np.random.randn(5)
@@ -304,7 +319,7 @@ class TestCalculations:
         
         plt.legend()
         plt.ylabel("Wasserstein error")
-        plt.yscale('log')
+        plt.yscale("log")
         plt.xlabel("Moments")
         plt.yticks([10**0, 10**(-1), 10**(-2), 10**(-3)])
         plt.grid()

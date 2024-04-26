@@ -193,8 +193,10 @@ def SLQMM(data, k, nv):
     for i in range(nv):
         T = modified_lanczos(data, V[:, i], k)
         Lambda, Vectors = np.linalg.eig(T)
-        VVT = np.dot(Vectors, Vectors.T)
-        weights = np.sum(VVT, axis=1) #/ float(k) # sum along columns of VV^T
+        weights = np.square(Vectors[0,:])
+        # weights = np.zeros_like(Lambda)
+        # for i in range(len(Lambda)):
+        #     weights[i] = np.outer(Vectors[:,i], Vectors[:,i])[0,0]
         localDistro = Distribution(Lambda, weights)
         
         outputDistro = mergeDistributions(outputDistro, localDistro, func=adder(nv))
