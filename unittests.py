@@ -1,6 +1,6 @@
 import numpy as np
 from src.lanczos import naive_lanczos
-from src.lanczos import modified_lanczos
+from src.lanczos import modified_lanczos, exact_lanczos
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import os
@@ -43,7 +43,7 @@ class TestCalculations:
             for q in range(len(iterations)):
                 rand_vecs = np.random.randn(n)
                 rand_vecs /= np.linalg.norm(rand_vecs)
-                Q, T = modified_lanczos(data, rand_vecs, iterations[q], return_type="Q and T")
+                Q, T = exact_lanczos(data, rand_vecs, iterations[q], return_type="Q and T")
                 
                 local_lambda, local_vecs = np.linalg.eig(T)
                 error1[t, q] = np.abs(true_lambda[index] - local_lambda[index])
