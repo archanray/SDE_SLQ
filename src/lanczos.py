@@ -127,5 +127,41 @@ def exact_lanczos(A,q0,k,reorth=True, return_type="T"):
         return T
     if return_type == "Q":
         return Q
-    if return_type == "Q and T":
+    if return_type == "QT":
         return Q,T
+    
+def wiki_lanczos(A,v1,k,return_type="T"):
+    # init values
+    n = len(A)
+    alpha = np.zeros(k)
+    beta = np.zeros(k)
+    V = np.zeros((n, k))
+    w_dash = np.zeros_like(V)
+    w = np.zeros_like(V)
+    
+    # init iteration step
+    V[:,0] = v1 / np.linalg.norm(v1)
+    w_dash[:,0] = A @ V[:,0]
+    alpha[0] = w_dash[:,0].T @ V[:,0]
+    w[:,0] = w_dash[:,0] - alpha[0] * V[:,0]
+    
+    for j in range(1, k):
+        beta[j] = np.linalg.norm(w[:,j-1])
+        if beta[j] == 0:
+            v_temp = np.random.randn(n)
+            v_temp /= np.linalg.norm(v_temp)
+            V[:,j] = v_temp - (V @ V.T @ v_temp)
+        else:
+            V[:,j] = w[:,j-1] / beta[j]
+        w_dash[:,j] = A @ V[:,j]
+        alpha[j] = w_dash[:,j].T @ V[:,j]
+        w[:,j] = w_dash[:,j] - (alpha[j] * V[:,j]) - (beta[j]*V[:,j-1])
+        pass
+    offset = [-1,0,1]        
+    T = diags([beta[1:], alpha, beta[1:]],offset).toarray()
+    if return_type == "T":
+        return T
+    if return_type == "Q":
+        return V
+    if return_type == "QT":
+        return V, T

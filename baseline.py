@@ -395,7 +395,7 @@ def expand_vals_to_net(val_arr, len_net):
 # def pdf_fromRep_mm(dist_mm, mesh):
 # 	return expand_vals_to_net(dist_mm, len(mesh))
 
-def create_grid(grid_size): return np.linspace(-1, 1, num=grid_size, endpoint=True)
+def create_grid(grid_size): return np.linspace(-1, 1, num=int(grid_size), endpoint=True)
 
 def pdf_fromRep_kpm(kpm_coeffs, grid_size): 
     grid = create_grid(grid_size)
@@ -403,6 +403,8 @@ def pdf_fromRep_kpm(kpm_coeffs, grid_size):
     
     c_grid = grid[1:-1]
     y[1:-1] = poly.chebyshev.chebweight(c_grid)*poly.chebyshev.chebval(c_grid, kpm_coeffs)
+    
+    print(y, grid)
     
     y[0] = y[1] + (y[1] - y[2])*abs(grid[2] - grid[1])
     y[-1] = y[-2] + (y[-2] - y[-3])*abs(grid[-2] - grid[-3])
@@ -805,7 +807,7 @@ def save_moments_csv(main_mat_fn, result_fns, labels, mesh_delta, title=""):
 
 # num = 1000
 # gfn = sbm.return_sbmgraph_object_filename(num, label='cliquePlusStar')
-#40, 2, 450 
+# 40, 2, 450 
 
 # num = pow(2, 14)
 # gfn = sbm.return_sbmgraph_object_filename(num, label='hypercube_graph')
@@ -825,35 +827,35 @@ gfn = sbm.return_sbmgraph_object_filename(num, label=curr_graph)
 
 sde_degree = 28 #Degree of chebyshev polynomial for sde
 num_rand_vecs = 2  #Number of hutchinson's vecs
-# cols_oversample_factor = 8000 #Scaling factor for col probabilities  
+cols_oversample_factor = 8000 #Scaling factor for col probabilities  
 mesh_delta = 1e-5 #No need to change 
 mm_mesh_delta = 1e-5
 mm_mesh = np.arange(-1, 1+mm_mesh_delta, mm_mesh_delta)
 
-# exact_args = {'deg' : sde_degree, 'mesh':mm_mesh}
+exact_args = {'deg' : sde_degree, 'mesh':mm_mesh}
 hutch_args = {'deg':sde_degree, 'num_random_vecs':num_rand_vecs,'mesh':mm_mesh}
-# approx_args = {'deg':sde_degree, 'num_random_vecs':num_rand_vecs,'mesh':mm_mesh,
-# 			'col_budget':cols_oversample_factor}
+approx_args = {'deg':sde_degree, 'num_random_vecs':num_rand_vecs,'mesh':mm_mesh,
+			'col_budget':cols_oversample_factor}
 
 
 # run_sde_experiment(gfn, 'exact_kpm', exact_args, mesh_delta)
-run_sde_experiment(gfn, 'hutch_kpm', hutch_args, mesh_delta)
+# run_sde_experiment(gfn, 'hutch_kpm', hutch_args, mesh_delta)
 # run_sde_experiment(gfn, 'approx_kpm', approx_args, mesh_delta)
-# run_sde_experiment(gfn, 'exact_mm', exact_args, mesh_delta)
-# run_sde_experiment(gfn, 'hutch_mm', hutch_args, mesh_delta)
-# run_sde_experiment(gfn, 'approx_mm', approx_args, mesh_delta)
+run_sde_experiment(gfn, 'exact_mm_pgd', exact_args, mesh_delta)
+run_sde_experiment(gfn, 'hutch_mm_pgd', hutch_args, mesh_delta)
+run_sde_experiment(gfn, 'approx_mm_pgd', approx_args, mesh_delta)
 
 
-# result_fns = [Result.get_result_filename(gfn, 'exact_mm', exact_args),
-# Result.get_result_filename(gfn, 'hutch_mm', hutch_args),
-# Result.get_result_filename(gfn, 'approx_mm', approx_args),
+result_fns = [Result.get_result_filename(gfn, 'exact_mm_pgd', exact_args),
+Result.get_result_filename(gfn, 'hutch_mm_pgd', hutch_args),
+Result.get_result_filename(gfn, 'approx_mm_pgd', approx_args)]#,
 # Result.get_result_filename(gfn, 'exact_kpm', exact_args),
-Result.get_result_filename(gfn, 'hutch_kpm', hutch_args),
+# Result.get_result_filename(gfn, 'hutch_kpm', hutch_args),
 # Result.get_result_filename(gfn, 'approx_kpm', approx_args)]
 
 # labels = ["MM", "KPM"]
-# # labels = ['Idealized MM', 'Hutchinson MM', 'Approximate Hutch MM',
-# # 'Idealized KPM', 'Hutchinson KPM', 'Approximate Hutch KPM']
+labels = ['Idealized MM', 'Hutchinson MM', 'Approximate Hutch MM',
+'Idealized KPM', 'Hutchinson KPM', 'Approximate Hutch KPM']
 
 # deg_list = np.arange(4, 64, 4, dtype=np.intc)
 
@@ -865,7 +867,7 @@ Result.get_result_filename(gfn, 'hutch_kpm', hutch_args),
 
 
 # result_fns = []
-# deg_list = [4,8,12,16,20,40]
+deg_list = [4,8,12,16,20,40]
 # labels = ['4', '8', '12', '16', '20', '40']
 # mm_mesh = np.arange(-1, 1+mm_mesh_delta, mm_mesh_delta)
 
@@ -894,7 +896,7 @@ Result.get_result_filename(gfn, 'hutch_kpm', hutch_args),
 # compute_W1_fromPDF(gfn, result_fns, np.arange(-1+mesh_delta, 1 - mesh_delta, mesh_delta), print_result=True)
 # plot_sdeRep(gfn, result_fns, labels, mesh_delta, curr_graph)	
 
-# plot_sdeRep_diffDegs(gfn, deg_list, mesh_delta, mm_mesh_delta, ['Moment Matching', 'KPM'], curr_graph)
+plot_sdeRep_diffDegs(gfn, deg_list, mesh_delta, mm_mesh_delta, ['Moment Matching', 'KPM'], curr_graph)
 
 # plot_sdeRep(gfn, result_fns, labels, mesh_delta, curr_graph)
 # plot_approxEigs_sdeRep_moments(gfn, result_fns, labels, mesh_delta, curr_graph)

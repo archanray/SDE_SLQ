@@ -1,6 +1,5 @@
 import numpy as np
-from src.lanczos import naive_lanczos
-from src.lanczos import modified_lanczos, exact_lanczos
+from src.lanczos import naive_lanczos, modified_lanczos, exact_lanczos, wiki_lanczos
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import os
@@ -16,6 +15,7 @@ from src.utils import normalizedChebyPolyFixedPoint
 import time
 from src.optimizers import pgdSolver
 import numpy.polynomial as poly
+import sys
 
 def findMaxIndex(L1):
     if np.abs(L1[-1]) > np.abs(L1[0]):
@@ -74,6 +74,7 @@ class TestCalculations:
         plt.savefig("figures/unittests/lanczosErrorL2.pdf", bbox_inches='tight',dpi=200)
         plt.close()
         return None
+    
     def checkCalculation(self):
         A = np.random.randn(10,10)
         A = (A+A.T) / 2
@@ -187,33 +188,29 @@ class TestCalculations:
     
     def test_lanczos(self):
         trials = 10
-        eps = 1e-25
-        n = 100
-        ks = np.array(list(range(10, n+10, 10)))
-        error1 = np.zeros((trials, len(ks)))
-        error2 = np.zeros((trials, len(ks)))
+        n = 500
+        ks = np.array(list(range(10, 505, 5)))
+        error = np.zeros((trials, len(ks)))
         
         for i in tqdm(range(trials)):
             A = np.random.randn(n,n)
+            A = (A+A.T) / 2
+            A /= np.linalg.norm(A, ord=2)
             v = np.random.randn(n)
+            v /= np.linalg.norm(v)
             for k in range(len(ks)):
-                Q1, T1 = naive_lanczos(A, v, ks[k], return_type="QT")
-                Q2, T2 = modified_lanczos(A, v, ks[k], return_type="QT")
-                error1[i, k] = np.log((np.linalg.norm(Q1@T1@Q1.T - A, ord=2) / np.linalg.norm(A, ord=2)) + eps)
-                error2[i, k] = np.log((np.linalg.norm(Q2@T2@Q2.T - A, ord=2) / np.linalg.norm(A, ord=2)) + eps)
-        meanError1 = np.mean(error1, axis=0)
-        meanError2 = np.mean(error2, axis=0)
-        p20Error1 = np.percentile(error1, q=20, axis=0)
-        p80Error1 = np.percentile(error1, q=80, axis=0)
-        p20Error2 = np.percentile(error2, q=20, axis=0)
-        p80Error2 = np.percentile(error2, q=80, axis=0)
-        self.plot_vals(np.log(ks / n),\
-                        meanError1, meanError2,\
-                        p20Error1, p80Error1,\
-                        p20Error2, p80Error2,\
-                        "Naive", "Modified",\
-                        "trial", "log relative approximation error",\
+                Q, T = modified_lanczos(A, v, ks[k], return_type="QT")
+                error[i, k] = np.linalg.norm((Q @ T @ Q.T) - A, ord=2)
+        meanError = np.mean(error, axis=0)
+        p20Error = np.percentile(error, q=20, axis=0)
+        p80Error = np.percentile(error, q=80, axis=0)
+        self.plot_vals(ks,\
+                        v1=meanError,\
+                        v1_lo=p20Error, v1_hi=p80Error,\
+                        label1="modified",\
+                        xlabel="iterations", ylabel=r"$||\mathbf{A}-\mathbf{QTQ}^T||_2$",\
                         filename="compare_lanczos")
+        return None
         
     def testMomentMatchings(self):
         Ns = np.array(list(range(20,88,8)))
@@ -396,8 +393,7 @@ class TestCalculations:
         
         plt.legend()
         plt.savefig("figures/unittests/CMM_valriations_with_d_"+dataset+".pdf", bbox_inches='tight', dpi=200)
-        
-        
+               
     def checkJacksonPolynomial(self):
         deg = 8
         print("J-Polys Here:", jacksonDampingCoefficients(deg))
@@ -423,4 +419,4 @@ class TestCalculations:
         return None
 
 if __name__ == '__main__':
-    TestCalculations().checkLanczosConvergence()
+    TestCalculations().test_lanczos()

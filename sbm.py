@@ -23,6 +23,7 @@ def load_pickle(pickle_file):
 
 
 def write_pickle(data, pickle_file):
+    print(pickle_file)
     with open(pickle_file, 'wb') as handle:
         pickle.dump(data, handle)
 
