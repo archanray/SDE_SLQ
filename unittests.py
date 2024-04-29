@@ -22,6 +22,18 @@ def findMaxIndex(L1):
         return -1
     else:
         return 0
+
+def sortValues(eigvals, eigvecs):
+    sorted_indices = np.argsort(eigvals)
+    eigvals = eigvals[sorted_indices]
+    eigvecs = eigvecs[:, sorted_indices]
+    return eigvals, eigvecs
+
+def padZeros(values, n):
+    zeroarray = np.zeros(n-len(values))
+    values = np.concatenate((values, zeroarray))
+    values = np.sort(values)
+    return values
     
 
 class TestCalculations:
@@ -39,6 +51,8 @@ class TestCalculations:
             data = (data+data.T) / 2
             data /= np.linalg.norm(data, ord=2)
             true_lambda, true_vecs = np.linalg.eig(data)
+            true_lambda, true_vecs = sortValues(true_lambda, true_vecs)
+            # plt.plot(range(len(true_lambda)), true_lambda)
             index = findMaxIndex(true_lambda)
             rand_vec = np.random.randn(n)
             rand_vec /= np.linalg.norm(rand_vec)
@@ -47,6 +61,11 @@ class TestCalculations:
                 Q, T = modified_lanczos(data, rand_vec, iterations[q], return_type="QT")
                 
                 local_lambda, local_vecs = np.linalg.eig(T)
+                local_lambda, local_vecs = sortValues(local_lambda, local_vecs)
+                local_lambda = padZeros(local_lambda, n)
+                # plt.plot(range(len(local_lambda)), local_lambda)
+                # plt.show()
+                # sys.exit(1)
                 error1[t, q] = np.abs(true_lambda[index] - local_lambda[index])
                 
                 Z_i = np.dot(Q, local_vecs[:,index].T)
