@@ -106,4 +106,10 @@ def jackson_poly_coeffs(deg):
         coeffs[k] = (1./norm)*np.sum((a*b))
     return coeffs
 
+def sortEigValues(eigvals, eigvecs):
+    sorted_indices = np.argsort(eigvals)
+    eigvals = eigvals[sorted_indices]
+    eigvecs = eigvecs[:, sorted_indices]
+    return eigvals, eigvecs
+
 # print(ChebyshevPolynomial(list(range(4)), 2).shape)

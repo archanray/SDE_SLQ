@@ -35,7 +35,7 @@ def get_data(name, seed=1):
             dataset_size = 500
             data = np.random.random((dataset_size, dataset_size))
             data = (data.T + data) / 2 # set all elements to [-1, 1]
-            data = data / np.linalg.norm(data, 2) # set A's spectral norm to 1
+            data /= np.linalg.norm(data, 2) # set A's spectral norm to 1
             with open(file_path, "wb") as f:
                 np.save(f, data)
             return data, dataset_size
@@ -59,11 +59,12 @@ def get_data(name, seed=1):
             """
             as described in https://arxiv.org/pdf/2104.03461.pdf
             """
-            n = 1000
+            n = 60
             Lambda = np.random.normal(size=n)
             Lambda = Lambda / max(Lambda)
             V = ortho_group.rvs(n)
             data = V @ np.diag(Lambda) @ V.T
+            data /= np.linalg.norm(data, ord=2)
             
             with open(file_path, "wb") as f:
                 np.save(f, data)
@@ -78,6 +79,7 @@ def get_data(name, seed=1):
             Lambda = Lambda / max(Lambda)
             V = ortho_group.rvs(n)
             data = V @ np.diag(Lambda) @ V.T
+            data /= np.linalg.norm(data, ord=2)
             
             with open(file_path, "wb") as f:
                 np.save(f, data)
@@ -97,7 +99,7 @@ def get_data(name, seed=1):
                 mat = scipy.io.loadmat('matrices/Erdos992.mat')
                 pass
             data = mat["Problem"][0][0][2].todense()
-            data = data / np.linalg.norm(data, ord=2)
+            data /= np.linalg.norm(data, ord=2)
             
             with open(file_path, "wb") as f:
                 np.save(f, data)

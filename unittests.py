@@ -3,9 +3,9 @@ from src.lanczos import naive_lanczos, modified_lanczos, exact_lanczos, wiki_lan
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import os
-from src.moment_estimator import approxChebMomentMatching, discretizedJacksonDampedKPM, hutchMomentEstimator, baselineHutch, baselineKPM, baselineCMM, exactCMM, SLQMM
+from src.moment_estimator import approxChebMomentMatching, discretizedJacksonDampedKPM, hutchMomentEstimator, baselineHutch, baselineKPM, baselineCMM, exactCMM, SLQMM, adder, SLQNew
 from src.utils import Wasserstein, jacksonDampingCoefficients, jackson_poly_coeffs
-from src.distribution import Distribution
+from src.distribution import Distribution, mergeDistributions
 from src.optimizers import cvxpyL1Solver
 from src.optimizers import pgdSolver
 from src.get_dataset import get_data
@@ -16,6 +16,7 @@ import time
 from src.optimizers import pgdSolver
 import numpy.polynomial as poly
 import sys
+import seaborn as sns
 
 def findMaxIndex(L1):
     if np.abs(L1[-1]) > np.abs(L1[0]):
@@ -34,9 +35,28 @@ def padZeros(values, n):
     values = np.concatenate((values, zeroarray))
     values = np.sort(values)
     return values
+
+def sortTwoArrays(A, B):
+    sorted_indices = np.argsort(A)
+    A = A[sorted_indices]
+    B = B[sorted_indices]
+    return A, B
     
 
 class TestCalculations:
+    def checkDistros(self):
+        D = Distribution()
+        for i in range(5):
+            print(D.support)
+            q = np.random.randn()
+            localD = Distribution([i], [q])
+            print(q, localD.support)
+            D = mergeDistributions(D, localD, func=adder(5))
+        print(D.support)
+        D.finalizeWeights()
+        print(D.support)
+        return None
+    
     def checkLanczosConvergence(self):
         trials = 5
         n = 500
@@ -354,7 +374,7 @@ class TestCalculations:
         if method == "exact_CMM":
             return exactCMM(data, eigvals, degree, cheb_vals)
         if method == "SLQMM":
-            return SLQMM(data, degree, 5)
+            return SLQNew(data, degree, 5)
         return None
     
     def checkSDEApproxError(self, data, moments, support_true, method="CMM", cheb_vals=1000, trials=5, submethod="cvxpy"):
@@ -362,14 +382,33 @@ class TestCalculations:
         quantile_hi = 90
         errors = np.zeros((trials,len(moments)))
         pdf_true = np.ones_like(support_true) / len(support_true)
+        print(support_true)
         eigvals = np.real(np.linalg.eigvals(data))
         
+        colors = sns.color_palette('hls', len(moments))
+        
         for t in tqdm(range(trials)):
+            fig, axs = plt.subplots(1,2)
+            fig.set_size_inches(16, 10)
+            # axs[0].set_prop_cycle('color', colors)
+            axs[0].scatter(support_true, pdf_true, label="true")
+            
             for j in range(len(moments)):
                 # print(method)
                 support_current, pdf_current = self.sdeComputer(data, moments[j], method = method, cheb_vals = cheb_vals, submethod=submethod, eigvals=eigvals)
+                # support_current, pdf_current = sortTwoArrays(support_current, pdf_current)
+                if j == len(moments)-1:
+                    print(support_current, pdf_current)
+                    axs[0].scatter(support_current, pdf_current, label=str(moments[j]))
                 errors[t,j] = sp.stats.wasserstein_distance(support_true, support_current, pdf_true, pdf_current)
             pass
+            # axs[0].xlabel("supports")
+            # axs[0].ylabel("pdf valus")
+            axs[1].plot(moments, errors[t,:])
+            # axs[1].xlabel("moments")
+            # axs[1].ylabel("wasserstein error")
+            axs[0].legend()
+            plt.savefig("figures/unittests/"+method+"_pdf_and_errors_at_moment.pdf", bbox_inches='tight', dpi=200)
         
         errors_mean = np.mean(errors, axis=0)
         errors_lo = np.percentile(errors, q=quantile_lo, axis=0)
@@ -381,7 +420,7 @@ class TestCalculations:
         dataset = "gaussian"
         data, n = get_data(dataset)
         support_true = np.real(np.linalg.eigvals(data))
-        methods = ["SLQMM", "CMM", "baseline_KPM"] #["CMM", "KPM", "baseline_KPM", "baseline_CMM", "exact_CMM"]
+        methods = ["SLQMM"]#["SLQMM", "CMM", "baseline_KPM"] #["CMM", "KPM", "baseline_KPM", "baseline_CMM", "exact_CMM"]
         moments = list(range(4,60,4))
         
         for i in range(len(methods)):
@@ -403,7 +442,7 @@ class TestCalculations:
         dataset = "gaussian"
         data, n = get_data(dataset)
         support_true = np.real(np.linalg.eigvals(data))
-        moments = list(range(4,60,4))
+        moments = list(range(4,104,4))
         
         for i in range(len(values)):
             errors_mean, errors_lo, errors_hi = self.checkSDEApproxError(data, moments, support_true, method="CMM", cheb_vals=values[i])
@@ -439,4 +478,4 @@ class TestCalculations:
         return None
 
 if __name__ == '__main__':
-    TestCalculations().checkLanczosConvergence()
+    TestCalculations().runSDEexperiments()

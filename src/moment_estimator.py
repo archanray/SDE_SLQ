@@ -1,6 +1,6 @@
 import numpy as np
 from copy import deepcopy
-from src.utils import normalizedChebyPolyFixedPoint, jacksonDampingCoefficients, jackson_poly_coeffs
+from src.utils import normalizedChebyPolyFixedPoint, jacksonDampingCoefficients, jackson_poly_coeffs, sortEigValues
 from src.optimizers import L1Solver
 from src.optimizers import cvxpyL1Solver
 from src.optimizers import pgdSolver
@@ -185,19 +185,40 @@ def exactCMM(data, eigvals, degree, cheb_vals=5):
     return support, pdf_vals
 
 def SLQMM(data, k, nv):
+    
     n = len(data)
     # draw random vecs from the surface of a unit sphere
-    V = np.random.randn(n,nv)
+    V = np.random.randn(n,k)
     V /= np.linalg.norm(V, axis=0)
     outputDistro = Distribution()
-    for i in range(nv):
-        T = modified_lanczos(data, V[:, i], k)
+    for i in range(k):
+        T = modified_lanczos(data, V[:, i], nv)
         Lambda, Vectors = np.linalg.eig(T)
         weights = np.square(Vectors[0,:])
+        print(weights)
         # weights = np.zeros_like(Lambda)
         # for i in range(len(Lambda)):
         #     weights[i] = np.outer(Vectors[:,i], Vectors[:,i])[0,0]
         localDistro = Distribution(Lambda, weights)
         
-        outputDistro = mergeDistributions(outputDistro, localDistro, func=adder(nv))
+        outputDistro = mergeDistributions(outputDistro, localDistro, func=adder(k))
+    # print(np.sum(list(outputDistro.support.values())))
+    outputDistro.finalizeWeights()
     return np.array(list(outputDistro.support.keys())), np.array(list(outputDistro.support.values()))
+
+def SLQNew(data, nv, k):
+    n = len(data)
+    V = np.random.randn(n,k)
+    V /= np.linalg.norm(V, axis=0)
+    LambdaStore = np.zeros((k, nv))
+    WeightStore = np.zeros_like(LambdaStore)
+    for i in range(k):
+        T = modified_lanczos(data, V[:, i], nv)
+        Lambda, Vectors = np.linalg.eig(T)
+        Lambda, Vectors = sortEigValues(Lambda, Vectors)
+        print("inside:", Lambda)
+        weights = np.square(Vectors[0,:])
+        LambdaStore[i,:] = Lambda
+        WeightStore[i,:] = weights
+    print("outside:", np.mean(LambdaStore, axis=0))
+    return np.mean(LambdaStore, axis=0), np.mean(WeightStore, axis=0)
