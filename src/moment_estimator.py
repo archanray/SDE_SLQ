@@ -1,6 +1,6 @@
 import numpy as np
 from copy import deepcopy
-from src.utils import normalizedChebyPolyFixedPoint, jacksonDampingCoefficients, jackson_poly_coeffs, sortEigValues
+from src.utils import normalizedChebyPolyFixedPoint, jacksonDampingCoefficients, jackson_poly_coeffs, sortEigValues, aggregator
 from src.optimizers import L1Solver
 from src.optimizers import cvxpyL1Solver
 from src.optimizers import pgdSolver
@@ -215,10 +215,15 @@ def SLQNew(data, nv, k):
     for i in range(k):
         T = modified_lanczos(data, V[:, i], nv)
         Lambda, Vectors = np.linalg.eig(T)
-        Lambda, Vectors = sortEigValues(Lambda, Vectors)
-        print("inside:", Lambda)
+        # Lambda, Vectors = sortEigValues(Lambda, Vectors)
+        # print("inside:", Lambda)
         weights = np.square(Vectors[0,:])
         LambdaStore[i,:] = Lambda
         WeightStore[i,:] = weights
-    print("outside:", np.mean(LambdaStore, axis=0))
-    return np.mean(LambdaStore, axis=0), np.mean(WeightStore, axis=0)
+    # \sum_{i=1}^k \sum_{j=1}^{nv} (w_{ij}/k)*delta(x-\lambda_{ij})
+    WeightStore /= k
+    LambdaStore = LambdaStore.ravel()
+    WeightStore = WeightStore.ravel()
+    LambdaStore, WeightStore = aggregator(LambdaStore, WeightStore)
+    # print("outside:", np.mean(LambdaStore, axis=0))
+    return LambdaStore, WeightStore

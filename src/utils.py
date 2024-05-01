@@ -112,4 +112,28 @@ def sortEigValues(eigvals, eigvecs):
     eigvecs = eigvecs[:, sorted_indices]
     return eigvals, eigvecs
 
+def sortTwoArray(A, B):
+    sorted_indices = np.argsort(A)
+    A = A[sorted_indices]
+    B = B[sorted_indices]
+    return A, B
+    
+def aggregator(A, B):
+    A, B = sortTwoArray(A, B)
+    # print(A, B)
+    outputA, outputB = [], []
+    start, stop = 0, 0
+    for i in range(1, len(A)):
+        if A[i-1] == A[i]:
+            stop += 1
+        else:
+            outputA.append(A[start])
+            outputB.append(np.mean(B[start:stop+1]))
+            start, stop = i, i
+    
+    outputA.append(A[start])
+    outputB.append(np.mean(B[start:stop+1]))
+    return np.array(outputA), np.array(outputB)      
+
 # print(ChebyshevPolynomial(list(range(4)), 2).shape)
+# print(aggregator(np.array([1,3,4,5,1, 5]), np.array([2,3,2,3,1,5])))
