@@ -388,27 +388,27 @@ class TestCalculations:
         colors = sns.color_palette('hls', len(moments))
         
         for t in tqdm(range(trials)):
-            fig, axs = plt.subplots(1,2)
-            fig.set_size_inches(16, 10)
+            # fig, axs = plt.subplots(1,2)
+            # fig.set_size_inches(16, 10)
             # axs[0].set_prop_cycle('color', colors)
-            axs[0].scatter(support_true, pdf_true, label="true")
+            # axs[0].scatter(support_true, pdf_true, label="true")
             
             for j in range(len(moments)):
                 # print(method)
                 support_current, pdf_current = self.sdeComputer(data, moments[j], method = method, cheb_vals = cheb_vals, submethod=submethod, eigvals=eigvals)
                 # support_current, pdf_current = sortTwoArrays(support_current, pdf_current)
-                if j == len(moments)-1:
-                    print(support_current, pdf_current)
-                    axs[0].scatter(support_current, pdf_current, label=str(moments[j]))
+                # if j == len(moments)-1:
+                #     print(support_current, pdf_current)
+                    # axs[0].scatter(support_current, pdf_current, label=str(moments[j]))
                 errors[t,j] = sp.stats.wasserstein_distance(support_true, support_current, pdf_true, pdf_current)
             pass
             # axs[0].xlabel("supports")
             # axs[0].ylabel("pdf valus")
-            axs[1].plot(moments, errors[t,:])
+            # axs[1].plot(moments, errors[t,:])
             # axs[1].xlabel("moments")
             # axs[1].ylabel("wasserstein error")
-            axs[0].legend()
-            plt.savefig("figures/unittests/"+method+"_pdf_and_errors_at_moment.pdf", bbox_inches='tight', dpi=200)
+            # axs[0].legend()
+            # plt.savefig("figures/unittests/"+method+"_pdf_and_errors_at_moment.pdf", bbox_inches='tight', dpi=200)
         
         errors_mean = np.mean(errors, axis=0)
         errors_lo = np.percentile(errors, q=quantile_lo, axis=0)

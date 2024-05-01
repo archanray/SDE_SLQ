@@ -195,7 +195,7 @@ def SLQMM(data, k, nv):
         T = modified_lanczos(data, V[:, i], nv)
         Lambda, Vectors = np.linalg.eig(T)
         weights = np.square(Vectors[0,:])
-        print(weights)
+        # print(weights)
         # weights = np.zeros_like(Lambda)
         # for i in range(len(Lambda)):
         #     weights[i] = np.outer(Vectors[:,i], Vectors[:,i])[0,0]
