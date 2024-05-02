@@ -2,3 +2,4 @@
 *.err
 __pycache__
 python_source/*
+matrices/*

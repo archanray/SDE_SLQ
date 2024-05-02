@@ -64,6 +64,7 @@ class TestCalculations:
         error1 = np.zeros((trials, len(iterations)))
         error2 = np.zeros_like(error1)
         # print(error1.shape)
+        flag = True
         
         for t in tqdm(range(trials)):
             # in each trial init the matrix first
@@ -78,7 +79,7 @@ class TestCalculations:
             rand_vec /= np.linalg.norm(rand_vec)
             
             for q in range(len(iterations)):
-                Q, T = modified_lanczos(data, rand_vec, iterations[q], return_type="QT")
+                Q, T = modified_lanczos(data, rand_vec, iterations[q], return_type="QT", reorth=flag)
                 
                 local_lambda, local_vecs = np.linalg.eig(T)
                 local_lambda, local_vecs = sortValues(local_lambda, local_vecs)
@@ -102,16 +103,20 @@ class TestCalculations:
         
         plt.plot(iterations, mean_error1)
         plt.fill_between(iterations, p20_error1, p80_error1, alpha=0.3)
+        plt.yscale("log")
+        plt.grid(linewidth=1)
         plt.xlabel("iterations")
         plt.ylabel(r"$|\lambda_1(\mathbf{A}) - \lambda_1(\mathbf{T})|$")
-        plt.savefig("figures/unittests/lanczosErrorAbs.pdf", bbox_inches='tight',dpi=200)
+        plt.savefig("figures/unittests/lanczosErrorAbs_"+str(flag)+".pdf", bbox_inches='tight',dpi=200)
         plt.close()
         
         plt.plot(iterations, mean_error2)
         plt.fill_between(iterations, p20_error2, p80_error2, alpha=0.3)
+        plt.yscale("log")
+        plt.grid(linewidth=1)
         plt.xlabel("iterations")
         plt.ylabel(r"$||\lambda_1(\mathbf{A})\mathbf{QZ}_1 - \mathbf{AQZ}_1||_2$")
-        plt.savefig("figures/unittests/lanczosErrorL2.pdf", bbox_inches='tight',dpi=200)
+        plt.savefig("figures/unittests/lanczosErrorL2_"+str(flag)+".pdf", bbox_inches='tight',dpi=200)
         plt.close()
         return None
     
@@ -471,4 +476,4 @@ class TestCalculations:
         return None
 
 if __name__ == '__main__':
-    TestCalculations().runSDEexperiments()
+    TestCalculations().checkLanczosConvergence()

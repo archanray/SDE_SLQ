@@ -46,7 +46,7 @@ def naive_lanczos(A, v, k, return_type="T"):
     else:
         return Q, T
 
-def modified_lanczos(A, v, k, return_type="T"):
+def modified_lanczos(A, v, k, return_type="T", reorth=True):
     """
     implements lanczos algorithm from https://arxiv.org/pdf/2105.06595.pdf
     """
@@ -68,7 +68,8 @@ def modified_lanczos(A, v, k, return_type="T"):
         T[i,i] = alpha
         Qtilde = Qtilde - alpha*Q[:,i]
         # reorthogonalization
-        Qtilde = Qtilde - np.dot(np.dot(Q,Q.T), Qtilde)
+        if reorth:
+            Qtilde = Qtilde - np.dot(np.dot(Q,Q.T), Qtilde)
         beta = np.linalg.norm(Qtilde)
         
         if i >= 1:
@@ -76,7 +77,10 @@ def modified_lanczos(A, v, k, return_type="T"):
         
         if i < k-1:
             Q[:,i+1] = Qtilde /beta
-    
+
+        if reorth:
+            T = Q.T @ A @ Q
+        
     if return_type == "T":
         return T
     elif return_type == "Q":
