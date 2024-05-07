@@ -223,6 +223,8 @@ class TestCalculations:
             plt.fill_between(x, v2_lo, v2_hi, alpha=0.2)
         plt.xlabel(xlabel)
         plt.ylabel(ylabel)
+        plt.yscale("log")
+        plt.grid(linewidth=0.3)
         plt.legend()
         savedir = os.path.join("figures", "unittests")
         if not os.path.isdir(savedir):
@@ -236,6 +238,7 @@ class TestCalculations:
         n = 500
         ks = np.array(list(range(10, 505, 5)))
         error = np.zeros((trials, len(ks)))
+        flag = True
         
         for i in tqdm(range(trials)):
             A = np.random.randn(n,n)
@@ -244,7 +247,7 @@ class TestCalculations:
             v = np.random.randn(n)
             v /= np.linalg.norm(v)
             for k in range(len(ks)):
-                Q, T = modified_lanczos(A, v, ks[k], return_type="QT")
+                Q, T = naive_lanczos(A, v, ks[k], return_type="QT", reorth=flag)
                 error[i, k] = np.linalg.norm((Q @ T @ Q.T) - A, ord=2)
         meanError = np.mean(error, axis=0)
         p20Error = np.percentile(error, q=20, axis=0)
@@ -254,7 +257,7 @@ class TestCalculations:
                         v1_lo=p20Error, v1_hi=p80Error,\
                         label1="modified",\
                         xlabel="iterations", ylabel=r"$||\mathbf{A}-\mathbf{QTQ}^T||_2$",\
-                        filename="compare_lanczos")
+                        filename="compare_lanczos_"+str(flag))
         return None
         
     def testMomentMatchings(self):
@@ -476,4 +479,4 @@ class TestCalculations:
         return None
 
 if __name__ == '__main__':
-    TestCalculations().checkLanczosConvergence()
+    TestCalculations().test_lanczos()

@@ -2,7 +2,7 @@ import numpy as np
 from copy import deepcopy
 from scipy.sparse import diags
 
-def naive_lanczos(A, v, k, return_type="T"):
+def naive_lanczos(A, v, k, return_type="T", reorth=False):
     """
     implements lanczos algorithm to return T and not the Q vectors
     
@@ -33,12 +33,16 @@ def naive_lanczos(A, v, k, return_type="T"):
         alpha = np.dot(Q[:,i].T, AQi) - eta*np.dot(Q[:,i].T, Q[:,i-1])
         Q_tilde = AQi - alpha*Q[:,i] - eta**Q[:,i-1]
         # adding the following line for local orthogonalization 
-        Q_tilde = Q_tilde - np.dot(np.dot(Q, Q.T), Q_tilde)
+        if reorth:
+            Q_tilde = Q_tilde - np.dot(np.dot(Q, Q.T), Q_tilde)
         
         # Set variable
         T[i,i] = alpha
         T[i, i-1] = T[i-1, i] = eta
-        
+    
+    if reorth:
+        T = Q.T @ A @ Q
+    
     if return_type == "T":
         return T
     elif return_type == "Q":
