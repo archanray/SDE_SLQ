@@ -9,39 +9,42 @@ def naive_lanczos(A, v, k, return_type="T", reorth=False):
     check page 41 of:
     Golub, G.H. and Meurant, G., 2009. Matrices, moments and quadrature with applications (Vol. 30). Princeton University Press.
     
-    + modification by Paige as per the book for local orthogonality
+    - modification by Paige as per the book for local orthogonality when reorth is True
+    
+    + for ortho doing: T = Q.T AQ
+    
+    - need to make this algorithm memory efficient
     """
     # init variables
     n = len(A)
-    T = np.zeros((k,k))
     Q = np.zeros((n,k))
+    Qtilde = np.zeros((n,k+1))
+    alpha = np.zeros(k)
+    eta = np.zeros(k-1)
     
-    # set up
+    # init steps
     Q[:,0] = v / np.linalg.norm(v)
-    alpha = np.dot(Q[:,0].T, np.dot(A, Q[:,0]))
-    Q_tilde = np.dot(A, Q[:,0]) - alpha*Q[:,0]
-    # orthogonalize Q_tilde
-    Q_tilde = Q_tilde - np.dot(np.dot(Q, Q.T), Q_tilde)
-    T[0,0] = alpha
+    alpha[0] = Q[:,0].T @ A @ Q[:,0]
+    Qtilde[:,1] = (A @ Q[:,0]) - (alpha[0] * Q[:,0])
     
-    # iteration
-    for i in range(1,k):
-        eta = np.linalg.norm(Q_tilde)
-        Q[:,i] = Q_tilde / eta
-        AQi = np.dot(A, Q[:,i])
-        # modification for finite precision stability
-        alpha = np.dot(Q[:,i].T, AQi) - eta*np.dot(Q[:,i].T, Q[:,i-1])
-        Q_tilde = AQi - alpha*Q[:,i] - eta**Q[:,i-1]
-        # adding the following line for local orthogonalization 
-        if reorth:
-            Q_tilde = Q_tilde - np.dot(np.dot(Q, Q.T), Q_tilde)
-        
-        # Set variable
-        T[i,i] = alpha
-        T[i, i-1] = T[i-1, i] = eta
+    for t in range(1,k):
+        eta[t-1] = np.linalg.norm(Qtilde[:,t])
+        Q[:,t] = Qtilde[:,t] / eta[t-1]
+        if not reorth:
+            alpha[t] = Q[:,t].T @ A @ Q[:,t]
+            Qtilde[:,t+1] = (A @ Q[:,t]) - (alpha[t]*Q[:,t]) - (eta[t-1] * Q[:, t-1])
+            pass
+        else:
+            alpha[t] = Q[:,t].T @ ((A @ Q[:,t]) - (eta[t-1]*Q[:,t-1]))
+            Qtilde[:,t+1] = (A @ Q[:,t] - (eta[t-1]*Q[:,t-1])) - (alpha[t]*Q[:,t])
+            pass
     
-    if reorth:
+    if not reorth:
+        T = diags([eta, alpha, eta],[-1,0,1]).toarray()
+    else:
+        # T = diags([eta, alpha, eta],[-1,0,1]).toarray()
         T = Q.T @ A @ Q
+        pass
     
     if return_type == "T":
         return T

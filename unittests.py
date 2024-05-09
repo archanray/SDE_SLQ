@@ -64,7 +64,7 @@ class TestCalculations:
         error1 = np.zeros((trials, len(iterations)))
         error2 = np.zeros_like(error1)
         # print(error1.shape)
-        flag = True
+        flag = False
         
         for t in tqdm(range(trials)):
             # in each trial init the matrix first
@@ -79,7 +79,7 @@ class TestCalculations:
             rand_vec /= np.linalg.norm(rand_vec)
             
             for q in range(len(iterations)):
-                Q, T = modified_lanczos(data, rand_vec, iterations[q], return_type="QT", reorth=flag)
+                Q, T = naive_lanczos(data, rand_vec, iterations[q], return_type="QT", reorth=flag)
                 
                 local_lambda, local_vecs = np.linalg.eig(T)
                 local_lambda, local_vecs = sortValues(local_lambda, local_vecs)
@@ -107,7 +107,7 @@ class TestCalculations:
         plt.grid(linewidth=1)
         plt.xlabel("iterations")
         plt.ylabel(r"$|\lambda_1(\mathbf{A}) - \lambda_1(\mathbf{T})|$")
-        plt.savefig("figures/unittests/lanczosErrorAbs_"+str(flag)+".pdf", bbox_inches='tight',dpi=200)
+        plt.savefig("figures/unittests/lanczosErrorAbs_naive_"+str(flag)+".pdf", bbox_inches='tight',dpi=200)
         plt.close()
         
         plt.plot(iterations, mean_error2)
@@ -116,7 +116,7 @@ class TestCalculations:
         plt.grid(linewidth=1)
         plt.xlabel("iterations")
         plt.ylabel(r"$||\lambda_1(\mathbf{A})\mathbf{QZ}_1 - \mathbf{AQZ}_1||_2$")
-        plt.savefig("figures/unittests/lanczosErrorL2_"+str(flag)+".pdf", bbox_inches='tight',dpi=200)
+        plt.savefig("figures/unittests/lanczosErrorL2_naive_"+str(flag)+".pdf", bbox_inches='tight',dpi=200)
         plt.close()
         return None
     
@@ -255,9 +255,9 @@ class TestCalculations:
         self.plot_vals(ks,\
                         v1=meanError,\
                         v1_lo=p20Error, v1_hi=p80Error,\
-                        label1="modified",\
+                        label1="naive",\
                         xlabel="iterations", ylabel=r"$||\mathbf{A}-\mathbf{QTQ}^T||_2$",\
-                        filename="compare_lanczos_"+str(flag))
+                        filename="compare_lanczos_naive_"+str(flag))
         return None
         
     def testMomentMatchings(self):
@@ -480,3 +480,4 @@ class TestCalculations:
 
 if __name__ == '__main__':
     TestCalculations().test_lanczos()
+    TestCalculations().checkLanczosConvergence()

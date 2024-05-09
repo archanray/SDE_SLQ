@@ -632,7 +632,8 @@ def plot_sdeRep_diffDegs(main_mat_fn, deg_list, mesh_delta, mm_mesh_delta, label
         for d in deg_list: 
             args = {'deg':d, 'mesh':mm_mesh}
             result_fns += [Result.get_result_filename(gfn, sde_kind_list[i], args)]
-        errs = compute_W1_fromPDF(main_mat_fn, result_fns, mesh, False)
+        # errs = compute_W1_fromPDF(main_mat_fn, result_fns, mesh, False)
+        errs = compute_W1_fromPDF(main_mat_fn, result_fns, False)
         plt.plot(deg_list, errs, label = labels[i], alpha = 0.75, color = colors[i], linewidth=1.5)
     plt.legend(loc='upper right')
     plt.yscale('log')
@@ -842,16 +843,16 @@ approx_args = {'deg':sde_degree, 'num_random_vecs':num_rand_vecs,'mesh':mm_mesh,
 # run_sde_experiment(gfn, 'hutch_kpm', hutch_args, mesh_delta)
 # run_sde_experiment(gfn, 'approx_kpm', approx_args, mesh_delta)
 run_sde_experiment(gfn, 'exact_mm_pgd', exact_args, mesh_delta)
-run_sde_experiment(gfn, 'hutch_mm_pgd', hutch_args, mesh_delta)
-run_sde_experiment(gfn, 'approx_mm_pgd', approx_args, mesh_delta)
+# run_sde_experiment(gfn, 'hutch_mm_pgd', hutch_args, mesh_delta)
+# run_sde_experiment(gfn, 'approx_mm_pgd', approx_args, mesh_delta)
 
-
-result_fns = [Result.get_result_filename(gfn, 'exact_mm_pgd', exact_args),
-Result.get_result_filename(gfn, 'hutch_mm_pgd', hutch_args),
-Result.get_result_filename(gfn, 'approx_mm_pgd', approx_args)]#,
+# result_fns = [Result.get_result_filename(gfn, 'exact_mm_pgd', exact_args)],
+# Result.get_result_filename(gfn, 'hutch_mm_pgd', hutch_args),
+# Result.get_result_filename(gfn, 'approx_mm_pgd', approx_args)]#,
 # Result.get_result_filename(gfn, 'exact_kpm', exact_args),
 # Result.get_result_filename(gfn, 'hutch_kpm', hutch_args),
 # Result.get_result_filename(gfn, 'approx_kpm', approx_args)]
+result_fns = [Result.get_result_filename(gfn, 'approx_mm_pgd', approx_args)]
 
 # labels = ["MM", "KPM"]
 labels = ['Idealized MM', 'Hutchinson MM', 'Approximate Hutch MM',
@@ -896,7 +897,8 @@ deg_list = [4,8,12,16,20,40]
 # compute_W1_fromPDF(gfn, result_fns, np.arange(-1+mesh_delta, 1 - mesh_delta, mesh_delta), print_result=True)
 # plot_sdeRep(gfn, result_fns, labels, mesh_delta, curr_graph)	
 
-plot_sdeRep_diffDegs(gfn, deg_list, mesh_delta, mm_mesh_delta, ['Moment Matching', 'KPM'], curr_graph)
+# plot_sdeRep_diffDegs(gfn, deg_list, mesh_delta, mm_mesh_delta, ['Moment Matching', 'KPM'], curr_graph)
+plot_sdeRep_diffDegs(gfn, deg_list, mesh_delta, mm_mesh_delta, ['Moment Matching'], curr_graph)
 
 # plot_sdeRep(gfn, result_fns, labels, mesh_delta, curr_graph)
 # plot_approxEigs_sdeRep_moments(gfn, result_fns, labels, mesh_delta, curr_graph)
