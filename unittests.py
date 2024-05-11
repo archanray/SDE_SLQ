@@ -1,5 +1,5 @@
 import numpy as np
-from src.lanczos import naive_lanczos, modified_lanczos, exact_lanczos, wiki_lanczos
+from src.lanczos import naive_lanczos, modified_lanczos, exact_lanczos, wiki_lanczos, CGMM_lanczos, QR_lanczos
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import os
@@ -64,7 +64,7 @@ class TestCalculations:
         error1 = np.zeros((trials, len(iterations)))
         error2 = np.zeros_like(error1)
         # print(error1.shape)
-        flag = False
+        flag = True
         
         for t in tqdm(range(trials)):
             # in each trial init the matrix first
@@ -107,7 +107,7 @@ class TestCalculations:
         plt.grid(linewidth=1)
         plt.xlabel("iterations")
         plt.ylabel(r"$|\lambda_1(\mathbf{A}) - \lambda_1(\mathbf{T})|$")
-        plt.savefig("figures/unittests/lanczosErrorAbs_naive_"+str(flag)+".pdf", bbox_inches='tight',dpi=200)
+        plt.savefig("figures/unittests/lanczos/ErrorAbs_naive_"+str(flag)+".pdf", bbox_inches='tight',dpi=200)
         plt.close()
         
         plt.plot(iterations, mean_error2)
@@ -116,7 +116,7 @@ class TestCalculations:
         plt.grid(linewidth=1)
         plt.xlabel("iterations")
         plt.ylabel(r"$||\lambda_1(\mathbf{A})\mathbf{QZ}_1 - \mathbf{AQZ}_1||_2$")
-        plt.savefig("figures/unittests/lanczosErrorL2_naive_"+str(flag)+".pdf", bbox_inches='tight',dpi=200)
+        plt.savefig("figures/unittests/lanczos/ErrorL2_naive_"+str(flag)+".pdf", bbox_inches='tight',dpi=200)
         plt.close()
         return None
     
@@ -249,15 +249,22 @@ class TestCalculations:
             for k in range(len(ks)):
                 Q, T = naive_lanczos(A, v, ks[k], return_type="QT", reorth=flag)
                 error[i, k] = np.linalg.norm((Q @ T @ Q.T) - A, ord=2)
+                # error[i, k] = np.linalg.norm((Q.T @ Q) - np.eye(ks[k])) / ks[k]
         meanError = np.mean(error, axis=0)
         p20Error = np.percentile(error, q=20, axis=0)
         p80Error = np.percentile(error, q=80, axis=0)
         self.plot_vals(ks,\
                         v1=meanError,\
                         v1_lo=p20Error, v1_hi=p80Error,\
-                        label1="naive",\
+                        label1="QR",\
                         xlabel="iterations", ylabel=r"$||\mathbf{A}-\mathbf{QTQ}^T||_2$",\
-                        filename="compare_lanczos_naive_"+str(flag))
+                        filename="lanczos/compare_lanczos_naive_"+str(flag))
+        # self.plot_vals(ks,\
+        #                 v1=meanError,\
+        #                 v1_lo=p20Error, v1_hi=p80Error,\
+        #                 label1="naive",\
+        #                 xlabel="iterations", ylabel=r"$||\mathbf{I}-\mathbf{Q}^T\mathbf{Q}||_F$",\
+        #                 filename="lanczos/QQ^T_"+str(flag))
         return None
         
     def testMomentMatchings(self):
@@ -480,4 +487,5 @@ class TestCalculations:
 
 if __name__ == '__main__':
     TestCalculations().test_lanczos()
+    plt.close()
     TestCalculations().checkLanczosConvergence()

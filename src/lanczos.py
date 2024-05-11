@@ -1,6 +1,7 @@
 import numpy as np
 from copy import deepcopy
 from scipy.sparse import diags
+from numpy.linalg import qr
 
 def naive_lanczos(A, v, k, return_type="T", reorth=False):
     """
@@ -43,6 +44,91 @@ def naive_lanczos(A, v, k, return_type="T", reorth=False):
         T = diags([eta, alpha, eta],[-1,0,1]).toarray()
     else:
         # T = diags([eta, alpha, eta],[-1,0,1]).toarray()
+        T = Q.T @ A @ Q
+        pass
+    
+    if return_type == "T":
+        return T
+    elif return_type == "Q":
+        return Q
+    else:
+        return Q, T
+    
+def CGMM_lanczos(A, b, k, return_type="T", reorth=False):
+    """
+    Algo 1.1 from Error Bounds for Lanczos-based Matrix Function Approximation
+    """
+    # set up and init variables
+    n = len(A)
+    Q = np.zeros((n,k+2))
+    Qtilde = np.zeros((n,k+2))
+    beta = np.zeros(k+1)
+    alpha = np.zeros(k+1)
+    Q[:,1] = b / np.linalg.norm(b)
+    
+    for j in range(1, k+1):
+        Qtilde[:,j+1] = A @ Q[:,j] - beta[j-1]*Q[:,j-1]
+        alpha[j] = np.inner(Qtilde[:,j+1], Q[:,j])
+        Qtilde[:,j+1] = Qtilde[:,j+1] - alpha[j]*Q[:,j]
+        if reorth:
+            # reorth Qtilde[j+1] against Q[:,1:j]
+            Qtilde[:,j+1] = Q[:,1:j] @ (Q[:,1:j].T @ Qtilde[:,j+1]) - Qtilde[:,j+1]
+            pass
+        beta[j] = np.linalg.norm(Qtilde[:,j+1])
+        Q[:,j+1] = Qtilde[:,j+1] / beta[j]
+        
+    if reorth:
+        T = Q[:,1:k+1].T @ A @ Q[:,1:k+1]
+        pass
+    else:
+        T = diags([beta[1:k], alpha[1:], beta[1:k]], [-1,0,1]).toarray()
+        
+    if return_type == "T":
+        return T
+    elif return_type == "Q":
+        return Q[:,1:k+1]
+    else:
+        return Q[:,1:k+1], T
+    
+def QR_lanczos(A, v, k, return_type="T", reorth=True):
+    """
+    implements lanczos algorithm to return T and not the Q vectors
+    
+    check page 41 of:
+    Golub, G.H. and Meurant, G., 2009. Matrices, moments and quadrature with applications (Vol. 30). Princeton University Press.
+    
+    + reorthogonalization at every step
+    
+    - need to make this algorithm memory efficient
+    """
+    # init variables
+    n = len(A)
+    Q = np.zeros((n,k))
+    Qtilde = np.zeros((n,k+1))
+    alpha = np.zeros(k)
+    eta = np.zeros(k-1)
+    
+    # init steps
+    Q[:,0] = v / np.linalg.norm(v)
+    alpha[0] = Q[:,0].T @ A @ Q[:,0]
+    Qtilde[:,1] = (A @ Q[:,0]) - (alpha[0] * Q[:,0])
+    
+    for t in range(1,k):
+        eta[t-1] = np.linalg.norm(Qtilde[:,t])
+        Q[:,t] = Qtilde[:,t] / eta[t-1]
+        if not reorth:
+            alpha[t] = Q[:,t].T @ A @ Q[:,t]
+            Qtilde[:,t+1] = (A @ Q[:,t]) - (alpha[t]*Q[:,t]) - (eta[t-1] * Q[:, t-1])
+            pass
+        else:
+            Q, R = qr(Q)
+            alpha[t] = Q[:,t].T @ ((A @ Q[:,t]) - (eta[t-1]*Q[:,t-1]))
+            Qtilde[:,t+1] = (A @ Q[:,t] - (eta[t-1]*Q[:,t-1])) - (alpha[t]*Q[:,t])
+            pass
+    
+    if not reorth:
+        T = diags([eta, alpha, eta],[-1,0,1]).toarray()
+    else:
         T = Q.T @ A @ Q
         pass
     
