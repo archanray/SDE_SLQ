@@ -51,14 +51,13 @@ def functionNameMapper(method):
     return None
 
 class testWrapper():
-    def checkLanczosConvergence(self):
+    def checkLanczosConvergence(self, method="naive", reorthogonalizeFlag=False):
         trials = 5
         n = 500
         iterations = np.arange(10,110,10)
         error1 = np.zeros((trials, len(iterations)))
         error2 = np.zeros_like(error1)
-        # print(error1.shape)
-        flag = True
+        func = functionNameMapper(method)
         
         for t in tqdm(range(trials)):
             # in each trial init the matrix first
@@ -73,7 +72,7 @@ class testWrapper():
             rand_vec /= np.linalg.norm(rand_vec)
             
             for q in range(len(iterations)):
-                Q, T = naive_lanczos(data, rand_vec, iterations[q], return_type="QT", reorth=flag)
+                Q, T = func(data, rand_vec, iterations[q], return_type="QT", reorth=reorthogonalizeFlag)
                 
                 local_lambda, local_vecs = np.linalg.eig(T)
                 local_lambda, local_vecs = sortValues(local_lambda, local_vecs)
@@ -101,7 +100,7 @@ class testWrapper():
         plt.grid(linewidth=1)
         plt.xlabel("iterations")
         plt.ylabel(r"$|\lambda_1(\mathbf{A}) - \lambda_1(\mathbf{T})|$")
-        plt.savefig("figures/unittests/lanczos/ErrorAbs_naive_"+str(flag)+".pdf", bbox_inches='tight',dpi=200)
+        plt.savefig("figures/unittests/lanczos/ErrorAbs_"+method+"_"+str(reorthogonalizeFlag)+".pdf", bbox_inches='tight',dpi=200)
         plt.close()
         
         plt.plot(iterations, mean_error2)
@@ -110,16 +109,16 @@ class testWrapper():
         plt.grid(linewidth=1)
         plt.xlabel("iterations")
         plt.ylabel(r"$||\lambda_1(\mathbf{A})\mathbf{QZ}_1 - \mathbf{AQZ}_1||_2$")
-        plt.savefig("figures/unittests/lanczos/ErrorL2_naive_"+str(flag)+".pdf", bbox_inches='tight',dpi=200)
+        plt.savefig("figures/unittests/lanczos/ErrorL2_"+method+"_"+str(reorthogonalizeFlag)+".pdf", bbox_inches='tight',dpi=200)
         plt.close()
         return None
     
-    def test_lanczos(self):
+    def test_lanczos(self, method="naive", reorthogonalizeFlag=False):
         trials = 10
         n = 500
         ks = np.array(list(range(10, 505, 5)))
         error = np.zeros((trials, len(ks)))
-        flag = True
+        func = functionNameMapper(method)
         
         for i in tqdm(range(trials)):
             A = np.random.randn(n,n)
@@ -128,7 +127,7 @@ class testWrapper():
             v = np.random.randn(n)
             v /= np.linalg.norm(v)
             for k in range(len(ks)):
-                Q, T = naive_lanczos(A, v, ks[k], return_type="QT", reorth=flag)
+                Q, T = func(A, v, ks[k], return_type="QT", reorth=reorthogonalizeFlag)
                 error[i, k] = np.linalg.norm((Q @ T @ Q.T) - A, ord=2)
                 # error[i, k] = np.linalg.norm((Q.T @ Q) - np.eye(ks[k])) / ks[k]
         meanError = np.mean(error, axis=0)
@@ -139,7 +138,7 @@ class testWrapper():
                         v1_lo=p20Error, v1_hi=p80Error,\
                         label1="QR",\
                         xlabel="iterations", ylabel=r"$||\mathbf{A}-\mathbf{QTQ}^T||_2$",\
-                        filename="lanczos/compare_lanczos_naive_"+str(flag))
+                        filename="lanczos/compare_lanczos_"+method+"_"+str(reorthogonalizeFlag))
         # self.plot_vals(ks,\
         #                 v1=meanError,\
         #                 v1_lo=p20Error, v1_hi=p80Error,\
@@ -150,8 +149,8 @@ class testWrapper():
 
     def checkEigenvalueAlignment(self, method="naive", reorthogonalizeFlag=False):
         trials = 5
-        n = 500
-        ks = np.array(list(range(10, 505, 5)))
+        n = 250
+        ks = np.array(list(range(10, 255, 5)))
         error = np.zeros((trials, len(ks)))
         func = functionNameMapper(method)
         
@@ -189,11 +188,11 @@ class testWrapper():
         if test == "eig alignment":
             self.checkEigenvalueAlignment(method, orthogonalizeFlag)
         if test == "convergence":
-            self.checkLanczosConvergence()
+            self.checkLanczosConvergence(method, orthogonalizeFlag)
         if test == "lanczos":
-            self.test_lanczos()
+            self.test_lanczos(method, orthogonalizeFlag)
         return None
         
     
 if __name__ == '__main__':
-    testWrapper().lanczosDebugDriver(test="eig alignment", method="modified", orthogonalizeFlag=False)
+    testWrapper().lanczosDebugDriver(test="eig alignment", method="modified", orthogonalizeFlag=True)
