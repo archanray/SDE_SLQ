@@ -1,5 +1,5 @@
 import numpy as np
-from src.lanczos import naive_lanczos, modified_lanczos, exact_lanczos, wiki_lanczos, CGMM_lanczos, QR_lanczos
+from src.lanczos import naive_lanczos, modified_lanczos, exact_lanczos, CGMM_lanczos, QR_lanczos
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import os
