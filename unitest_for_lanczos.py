@@ -1,5 +1,5 @@
 import numpy as np
-from src.lanczos import naive_lanczos, modified_lanczos, exact_lanczos, CGMM_lanczos, QR_lanczos
+from src.lanczos import naive_lanczos, CTU_lanczos
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import os
@@ -31,30 +31,49 @@ def sortValues(eigvals, eigvecs):
     return eigvals, eigvecs
 
 def padZeros(eigvals, n):
-    return np.pad(eigvals, (0, n-len(eigvals)), mode='constant', constant_values=0)
+    # pads zeros and re-sorts the eigenvalues to avoid issues of matching incorrectly to the original spectrum
+    eigvals = np.pad(eigvals, (0, n-len(eigvals)), mode='constant', constant_values=0)
+    return np.sort(eigvals)
 
 def functionNameMapper(method):
     if method == "naive":
         return naive_lanczos
-    elif method == "modified":
-        return modified_lanczos
-    elif method == "exact":
-        return exact_lanczos
-    elif method == "wiki":
-        return wiki_lanczos
-    elif method == "CGMM":
-        return CGMM_lanczos
-    elif method == "QR":
-        return QR_lanczos
+    elif method == "CTU":
+        return CTU_lanczos
     else:
         raise ValueError("Invalid method name")
+    return None
+
+def plot_vals(x=None, v1=None, v2=None, v1_lo=None, v1_hi=None, v2_lo=None, v2_hi=None,\
+                label1=None, label2=None, xlabel=None, ylabel=None, filename="plot", ext=".pdf"):
+    plt.rcParams.update({'font.size': 13})
+    if v1 is None:
+        pass
+    else:
+        plt.plot(x, v1, label=label1)
+        plt.fill_between(x, v1_lo, v1_hi, alpha=0.2)
+    if v2 is None:
+        pass
+    else:
+        plt.plot(x, v2, label=label2)
+        plt.fill_between(x, v2_lo, v2_hi, alpha=0.2)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.yscale("log")
+    plt.grid(linewidth=0.3)
+    plt.legend()
+    savedir = os.path.join("figures", "unittests")
+    if not os.path.isdir(savedir):
+        os.makedirs(savedir)
+    savefilepath = os.path.join(savedir, filename+ext)
+    plt.savefig(savefilepath, bbox_inches='tight',dpi=200)
     return None
 
 class testWrapper():
     def checkLanczosConvergence(self, method="naive", reorthogonalizeFlag=False):
         trials = 5
-        n = 500
-        iterations = np.arange(10,110,10)
+        n = 250
+        iterations = np.arange(10,250,10)
         error1 = np.zeros((trials, len(iterations)))
         error2 = np.zeros_like(error1)
         func = functionNameMapper(method)
@@ -68,6 +87,7 @@ class testWrapper():
             true_lambda, true_vecs = sortValues(true_lambda, true_vecs)
             # plt.plot(range(len(true_lambda)), true_lambda)
             index = findMaxIndex(true_lambda)
+            # index = 3
             rand_vec = np.random.randn(n)
             rand_vec /= np.linalg.norm(rand_vec)
             
@@ -76,17 +96,18 @@ class testWrapper():
                 
                 local_lambda, local_vecs = np.linalg.eig(T)
                 local_lambda, local_vecs = sortValues(local_lambda, local_vecs)
-                local_lambda = padZeros(local_lambda, n)
-                # plt.plot(range(len(local_lambda)), local_lambda)
-                # plt.show()
-                # sys.exit(1)
+                local_lambda = padZeros(local_lambda, n) # padding after sorting needs another sort for just the eigenvalues, this is handled by the padZeros function now
                 error1[t, q] = np.abs(true_lambda[index] - local_lambda[index])
                 
                 Z_i = np.dot(Q, local_vecs[:,index].T)
                 L_iZ_i = local_lambda[index] * Z_i
                 AZ_i = np.dot(data, Z_i.T)
                 error2[t, q] = np.linalg.norm(L_iZ_i - AZ_i)
-            pass
+            
+            # plt.plot(iterations,error1[t,:])
+            # plt.show()
+            # plt.close()
+            # plt.clf()
         mean_error1 = np.mean(error1, axis=0)
         p20_error1 = np.percentile(error1, axis=0, q=20)
         p80_error1 = np.percentile(error1, axis=0, q=80)
@@ -115,8 +136,8 @@ class testWrapper():
     
     def test_lanczos(self, method="naive", reorthogonalizeFlag=False):
         trials = 10
-        n = 500
-        ks = np.array(list(range(10, 505, 5)))
+        n = 250
+        ks = np.array(list(range(10, 255, 5)))
         error = np.zeros((trials, len(ks)))
         func = functionNameMapper(method)
         
@@ -133,18 +154,18 @@ class testWrapper():
         meanError = np.mean(error, axis=0)
         p20Error = np.percentile(error, q=20, axis=0)
         p80Error = np.percentile(error, q=80, axis=0)
-        self.plot_vals(ks,\
-                        v1=meanError,\
-                        v1_lo=p20Error, v1_hi=p80Error,\
-                        label1="QR",\
-                        xlabel="iterations", ylabel=r"$||\mathbf{A}-\mathbf{QTQ}^T||_2$",\
-                        filename="lanczos/compare_lanczos_"+method+"_"+str(reorthogonalizeFlag))
-        # self.plot_vals(ks,\
-        #                 v1=meanError,\
-        #                 v1_lo=p20Error, v1_hi=p80Error,\
-        #                 label1="naive",\
-        #                 xlabel="iterations", ylabel=r"$||\mathbf{I}-\mathbf{Q}^T\mathbf{Q}||_F$",\
-        #                 filename="lanczos/QQ^T_"+str(flag))
+        plot_vals(ks,\
+                v1=meanError,\
+                v1_lo=p20Error, v1_hi=p80Error,\
+                label1=method,\
+                xlabel="iterations", ylabel=r"$||\mathbf{A}-\mathbf{QTQ}^T||_2$",\
+                filename="lanczos/compare_lanczos_"+method+"_"+str(reorthogonalizeFlag))
+        # plot_vals(ks,\
+        #         v1=meanError,\
+        #         v1_lo=p20Error, v1_hi=p80Error,\
+        #         label1="naive",\
+        #         xlabel="iterations", ylabel=r"$||\mathbf{I}-\mathbf{Q}^T\mathbf{Q}||_F$",\
+        #         filename="lanczos/QQ^T_"+str(flag))
         return None
 
     def checkEigenvalueAlignment(self, method="naive", reorthogonalizeFlag=False):
@@ -168,7 +189,6 @@ class testWrapper():
                 local_lambda, local_vecs = np.linalg.eig(Q.T @ A @ Q)
                 local_lambda, local_vecs = sortValues(local_lambda, local_vecs)
                 local_lambda = padZeros(local_lambda, n)
-                local_lambda = np.sort(local_lambda)
                 error[i, k] = np.abs(local_lambda - true_eigvals).max() / np.abs(true_eigvals).max()
                 error[i, k] = np.log(error[i, k])
     
@@ -188,6 +208,7 @@ class testWrapper():
         if test == "eig alignment":
             self.checkEigenvalueAlignment(method, orthogonalizeFlag)
         if test == "convergence":
+            # tested, plotted, works perfectly now!
             self.checkLanczosConvergence(method, orthogonalizeFlag)
         if test == "lanczos":
             self.test_lanczos(method, orthogonalizeFlag)
@@ -195,4 +216,4 @@ class testWrapper():
         
     
 if __name__ == '__main__':
-    testWrapper().lanczosDebugDriver(test="eig alignment", method="modified", orthogonalizeFlag=True)
+    testWrapper().lanczosDebugDriver(test="convergence", method="CTU", orthogonalizeFlag=False)

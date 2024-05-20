@@ -8,7 +8,7 @@ from tqdm import tqdm
 import math
 import numpy.polynomial as poly
 import src.pgd as pgd
-from src.lanczos import modified_lanczos
+from src.lanczos import CTU_lanczos
 from src.distribution import Distribution, mergeDistributions
 
 def adder(l):
