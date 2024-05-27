@@ -163,12 +163,25 @@ class testWrapper():
                 label1=method,\
                 xlabel="iterations", ylabel=r"$||\mathbf{A}-\mathbf{QTQ}^T||_2$",\
                 filename="lanczos/compare_lanczos_"+method+"_"+str(reorthogonalizeFlag))
-        # plot_vals(ks,\
-        #         v1=meanError,\
-        #         v1_lo=p20Error, v1_hi=p80Error,\
-        #         label1="naive",\
-        #         xlabel="iterations", ylabel=r"$||\mathbf{I}-\mathbf{Q}^T\mathbf{Q}||_F$",\
-        #         filename="lanczos/QQ^T_"+str(flag))
+        return None
+    
+    def testPlotEigVals(self, method="naive", reorthogonalizeFlag=False):
+        n= 250
+        iters = 250
+        A = np.random.randn(n,n)
+        A = (A+A.T) / 2
+        A /= np.linalg.norm(A, ord=2)
+        v = np.random.randn(n)
+        v /= np.linalg.norm(v)
+        func = functionNameMapper(method)
+        T = func(A, v, iters, return_type="T", reorth=reorthogonalizeFlag)
+        local_eigs = np.real(np.linalg.eig(T)[0])
+        local_eigs = padZeros(local_eigs, n)
+        global_eigs = np.real(np.linalg.eig(A)[0])
+        global_eigs = np.sort(global_eigs)
+        plt.scatter(range(len(global_eigs)), global_eigs, color="blue")
+        plt.scatter(range(len(local_eigs)), local_eigs, color="red")
+        plt.show()
         return None
 
     def checkEigenvalueAlignment(self, method="naive", reorthogonalizeFlag=False):
@@ -216,8 +229,10 @@ class testWrapper():
             self.checkLanczosConvergence(method, orthogonalizeFlag)
         if test == "lanczos":
             self.test_lanczos(method, orthogonalizeFlag)
+        if test == "check eigs":
+            self.testPlotEigVals(method, orthogonalizeFlag)
         return None
         
     
 if __name__ == '__main__':
-    testWrapper().lanczosDebugDriver(test="lanczos", method="CTU", orthogonalizeFlag=False)
+    testWrapper().lanczosDebugDriver(test="check eigs", method="CTU", orthogonalizeFlag=True)

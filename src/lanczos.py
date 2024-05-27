@@ -74,6 +74,7 @@ def CTU_lanczos(A, v, k, return_type="T", reorth=False):
             qtilde = A @ Q[:, i-1]
         
         alpha[i-1] = qtilde.T @ Q[:, i-1]
+        
         qtilde = qtilde - alpha[i-1]*Q[:, i-1]
         
         if reorth:

@@ -192,7 +192,7 @@ def SLQMM(data, k, nv):
     V /= np.linalg.norm(V, axis=0)
     outputDistro = Distribution()
     for i in range(k):
-        T = modified_lanczos(data, V[:, i], nv)
+        T = CTU_lanczos(data, V[:, i], nv)
         Lambda, Vectors = np.linalg.eig(T)
         weights = np.square(Vectors[0,:])
         # print(weights)
@@ -213,7 +213,7 @@ def SLQNew(data, nv, k):
     LambdaStore = np.zeros((k, nv))
     WeightStore = np.zeros_like(LambdaStore)
     for i in range(k):
-        T = modified_lanczos(data, V[:, i], nv)
+        T = CTU_lanczos(data, V[:, i], nv)
         Lambda, Vectors = np.linalg.eig(T)
         # Lambda, Vectors = sortEigValues(Lambda, Vectors)
         # print("inside:", Lambda)
