@@ -71,6 +71,7 @@ def plot_vals(x=None, v1=None, v2=None, v1_lo=None, v1_hi=None, v2_lo=None, v2_h
 
 class testWrapper():
     def checkLanczosConvergence(self, method="naive", reorthogonalizeFlag=False):
+        # this has been tested to work
         trials = 5
         n = 250
         iterations = np.arange(10,250,10)
@@ -149,6 +150,8 @@ class testWrapper():
             v /= np.linalg.norm(v)
             for k in range(len(ks)):
                 Q, T = func(A, v, ks[k], return_type="QT", reorth=reorthogonalizeFlag)
+                # after this, T and Q needs realignment.
+                
                 error[i, k] = np.linalg.norm((Q @ T @ Q.T) - A, ord=2)
                 # error[i, k] = np.linalg.norm((Q.T @ Q) - np.eye(ks[k])) / ks[k]
         meanError = np.mean(error, axis=0)
@@ -180,15 +183,16 @@ class testWrapper():
             A = (A+A.T) / 2
             A /= np.linalg.norm(A, ord=2)
             true_eigvals = np.real(np.linalg.eig(A)[0]) # true eigenvalues
-            true_eigvals = np.sort(true_eigvals)
+            true_eigvals = np.sort(true_eigvals) # ascending order sort
             v = np.random.randn(n)
             v /= np.linalg.norm(v)
             
             for k in range(len(ks)):
                 Q = func(A, v, ks[k], return_type="Q", reorth=reorthogonalizeFlag)
                 local_lambda, local_vecs = np.linalg.eig(Q.T @ A @ Q)
-                local_lambda, local_vecs = sortValues(local_lambda, local_vecs)
-                local_lambda = padZeros(local_lambda, n)
+                # local_lambda, local_vecs = sortValues(np.real(local_lambda), local_vecs)
+                local_lambda = padZeros(np.real(local_lambda), n)
+                print("observe values:", local_lambda, true_eigvals)
                 error[i, k] = np.abs(local_lambda - true_eigvals).max() / np.abs(true_eigvals).max()
                 error[i, k] = np.log(error[i, k])
     
@@ -216,4 +220,4 @@ class testWrapper():
         
     
 if __name__ == '__main__':
-    testWrapper().lanczosDebugDriver(test="convergence", method="CTU", orthogonalizeFlag=False)
+    testWrapper().lanczosDebugDriver(test="lanczos", method="CTU", orthogonalizeFlag=False)
