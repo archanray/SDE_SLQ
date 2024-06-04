@@ -184,36 +184,14 @@ def exactCMM(data, eigvals, degree, cheb_vals=5):
     support, pdf_vals = approxChebMomentMatching(moments, cheb_vals=cheb_vals)
     return support, pdf_vals
 
-def SLQMM(data, k, nv):
-    
-    n = len(data)
-    # draw random vecs from the surface of a unit sphere
-    V = np.random.randn(n,k)
-    V /= np.linalg.norm(V, axis=0)
-    outputDistro = Distribution()
-    for i in range(k):
-        T = CTU_lanczos(data, V[:, i], nv)
-        Lambda, Vectors = np.linalg.eig(T)
-        weights = np.square(Vectors[0,:])
-        # print(weights)
-        # weights = np.zeros_like(Lambda)
-        # for i in range(len(Lambda)):
-        #     weights[i] = np.outer(Vectors[:,i], Vectors[:,i])[0,0]
-        localDistro = Distribution(Lambda, weights)
-        
-        outputDistro = mergeDistributions(outputDistro, localDistro, func=adder(k))
-    # print(np.sum(list(outputDistro.support.values())))
-    outputDistro.finalizeWeights()
-    return np.array(list(outputDistro.support.keys())), np.array(list(outputDistro.support.values()))
-
-def SLQNew(data, nv, k):
+def SLQMM(data, nv, k):
     n = len(data)
     V = np.random.randn(n,k)
     V /= np.linalg.norm(V, axis=0)
     LambdaStore = np.zeros((k, nv))
     WeightStore = np.zeros_like(LambdaStore)
     for i in range(k):
-        T = CTU_lanczos(data, V[:, i], nv)
+        T = CTU_lanczos(data, V[:, i], nv, reorth=True)
         Lambda, Vectors = np.linalg.eig(T)
         # Lambda, Vectors = sortEigValues(Lambda, Vectors)
         # print("inside:", Lambda)

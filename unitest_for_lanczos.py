@@ -11,7 +11,7 @@ from src.optimizers import pgdSolver
 from src.get_dataset import get_data
 import scipy as sp
 import numpy.polynomial as poly
-from src.utils import normalizedChebyPolyFixedPoint
+from src.utils import normalizedChebyPolyFixedPoint, aggregator
 import time
 from src.optimizers import pgdSolver
 import numpy.polynomial as poly

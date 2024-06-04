@@ -1,9 +1,9 @@
 import numpy as np
-from src.lanczos import naive_lanczos, modified_lanczos, exact_lanczos, wiki_lanczos, CGMM_lanczos, QR_lanczos
+from src.lanczos import naive_lanczos
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import os
-from src.moment_estimator import approxChebMomentMatching, discretizedJacksonDampedKPM, hutchMomentEstimator, baselineHutch, baselineKPM, baselineCMM, exactCMM, SLQMM, adder, SLQNew
+from src.moment_estimator import approxChebMomentMatching, discretizedJacksonDampedKPM, hutchMomentEstimator, baselineHutch, baselineKPM, baselineCMM, exactCMM, SLQMM, adder
 from src.utils import Wasserstein, jacksonDampingCoefficients, jackson_poly_coeffs
 from src.distribution import Distribution, mergeDistributions
 from src.optimizers import cvxpyL1Solver
@@ -292,7 +292,7 @@ class TestCalculations:
         if method == "exact_CMM":
             return exactCMM(data, eigvals, degree, cheb_vals)
         if method == "SLQMM":
-            return SLQNew(data, degree, 5)
+            return SLQMM(data, degree, 5)
         return None
     
     def checkSDEApproxError(self, data, moments, support_true, method="CMM", cheb_vals=1000, trials=5, submethod="cvxpy"):
@@ -328,7 +328,7 @@ class TestCalculations:
         return errors_mean, errors_lo, errors_hi
     
     def runSDEexperiments(self):
-        dataset = "gaussian"
+        dataset = "hypercube"
         data, n = get_data(dataset)
         support_true = np.real(np.linalg.eigvals(data))
         methods = ["SLQMM"]#["SLQMM", "CMM", "baseline_KPM"] #["CMM", "KPM", "baseline_KPM", "baseline_CMM", "exact_CMM"]

@@ -44,13 +44,16 @@ def get_data(name, seed=1):
             """
             code adapted from Aditya
             """
-            d = 14
+            d = 10
             n = pow(2, d)
             adj_mat = np.zeros((n, n))
             for i in range(n): 
                 for b in range(d): 
                     adj_mat[i][i ^ pow(2, b)] = 1.
-            data = normalize_adj_sym(adj_mat)
+            data = (adj_mat + adj_mat.T) / 2 
+            data /= np.linalg.norm(data, ord=2)
+            print("generated data!")
+            # data = normalize_adj_sym(adj_mat)
             with open(file_path, "wb") as f:
                 np.save(f, data)
             return data, n

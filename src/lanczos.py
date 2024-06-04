@@ -54,7 +54,7 @@ def naive_lanczos(A, v, k, return_type="T", reorth=False):
     else:
         return Q, T
     
-def CTU_lanczos(A, v, k, return_type="T", reorth=False):
+def CTU_lanczos(A, v, k, return_type="T", reorth=True):
     """
     Algo 2 of https://arxiv.org/pdf/2105.06595
     """
