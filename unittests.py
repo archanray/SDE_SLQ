@@ -328,10 +328,10 @@ class TestCalculations:
         return errors_mean, errors_lo, errors_hi
     
     def runSDEexperiments(self):
-        dataset = "hypercube"
+        dataset = "gaussian"
         data, n = get_data(dataset)
         support_true = np.real(np.linalg.eigvals(data))
-        methods = ["SLQMM"]#["SLQMM", "CMM", "baseline_KPM"] #["CMM", "KPM", "baseline_KPM", "baseline_CMM", "exact_CMM"]
+        methods = ["SLQMM", "CMM", "KPM"]#["SLQMM", "CMM", "baseline_KPM"] #["CMM", "KPM", "baseline_KPM", "baseline_CMM", "exact_CMM"]
         moments = list(range(4,60,4))
         
         for i in range(len(methods)):
