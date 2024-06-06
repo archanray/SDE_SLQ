@@ -80,8 +80,8 @@ def CTU_lanczos(A, v, k, return_type="T", reorth=True):
         if reorth:
             # Gram-Schmidt orthogonalization for qtilde
             # qtilde = qtilde - Q[:,:i-2] @ (Q[:,:i-2].T @ qtilde)
-            # qtilde = qtilde - ((Q @ Q.T) @ qtilde)
-            qtilde = ((Q @ Q.T) @ qtilde) - qtilde
+            qtilde = qtilde - ((Q @ Q.T) @ qtilde)
+            # qtilde = ((Q @ Q.T) @ qtilde) - qtilde
         
         if i < k:
             beta[i-1] = np.linalg.norm(qtilde)
