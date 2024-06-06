@@ -249,11 +249,11 @@ class testWrapper():
         plt.colorbar()
         plt.show()
         
-        Q_delimit = Q[:, delimiter:iters]
+        Q_delimit = Q#Q[:, delimiter:iters]
         local_lambda = np.real(np.linalg.eig(Q_delimit.T @ A @ Q_delimit)[0])
         
         plt.scatter(range(len(local_lambda)), local_lambda, color="red", label="approx")
-        # plt.scatter(range(len(true_lambda)), true_lambda, color="blue", label="true")
+        plt.scatter(range(len(true_lambda)), true_lambda, color="blue", label="true")
         plt.legend()
         plt.title("iterations = "+str(iters)+", size=1000")
         plt.show()
@@ -276,4 +276,4 @@ class testWrapper():
         
     
 if __name__ == '__main__':
-    testWrapper().lanczosDebugDriver(test="convergence", method="CTU", orthogonalizeFlag=True)
+    testWrapper().lanczosDebugDriver(test="lanczos", method="CTU", orthogonalizeFlag=True)

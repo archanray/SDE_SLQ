@@ -85,7 +85,10 @@ def CTU_lanczos(A, v, k, return_type="T", reorth=True):
         
         if i < k:
             beta[i-1] = np.linalg.norm(qtilde)
-            Q[:, i] = qtilde / beta[i-1]
+            if beta[i-1] < 1e-8:
+                pass
+            else:
+                Q[:, i] = qtilde / beta[i-1]
             # Q, R = np.linalg.qr(Q)
     
     
