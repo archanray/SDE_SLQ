@@ -333,12 +333,13 @@ class TestCalculations:
         support_true = np.real(np.linalg.eigvals(data))
         methods = ["SLQMM", "CMM", "KPM"]#["SLQMM", "CMM", "baseline_KPM"] #["CMM", "KPM", "baseline_KPM", "baseline_CMM", "exact_CMM"]
         moments = list(range(4,60,4))
+        colors = ["red", "blue", "black"]
         
         for i in range(len(methods)):
             errors_mean, errors_lo, errors_hi = self.checkSDEApproxError(data, moments, support_true, method=methods[i], cheb_vals=5000)
             
-            plt.plot(moments, errors_mean, label=methods[i])
-            plt.fill_between(moments, errors_lo, errors_hi, alpha=0.2)
+            plt.plot(moments, errors_mean, label=methods[i], color=colors[i])
+            plt.fill_between(moments, errors_lo, errors_hi, alpha=0.2, color=colors[i])
         
         plt.legend()
         plt.ylabel("Wasserstein error")

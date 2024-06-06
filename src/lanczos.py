@@ -79,16 +79,19 @@ def CTU_lanczos(A, v, k, return_type="T", reorth=True):
         
         if reorth:
             # Gram-Schmidt orthogonalization for qtilde
-            qtilde = qtilde - Q[:,:i-2] @ (Q[:,:i-2].T @ qtilde)
+            # qtilde = qtilde - Q[:,:i-2] @ (Q[:,:i-2].T @ qtilde)
+            # qtilde = qtilde - ((Q @ Q.T) @ qtilde)
+            qtilde = ((Q @ Q.T) @ qtilde) - qtilde
         
         if i < k:
             beta[i-1] = np.linalg.norm(qtilde)
             Q[:, i] = qtilde / beta[i-1]
+            # Q, R = np.linalg.qr(Q)
     
     
     if reorth:
-        # T = Q.T @ A @ Q
-        T = diags([beta, alpha, beta],[-1,0,1]).toarray()
+        T = Q.T @ A @ Q
+        # T = diags([beta, alpha, beta],[-1,0,1]).toarray()
     else:
         T = diags([beta, alpha, beta],[-1,0,1]).toarray()
             

@@ -3,7 +3,6 @@ from src.lanczos import naive_lanczos, CTU_lanczos
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import os
-from src.moment_estimator import approxChebMomentMatching, discretizedJacksonDampedKPM, hutchMomentEstimator, baselineHutch, baselineKPM, baselineCMM, exactCMM, SLQMM, adder, SLQNew
 from src.utils import Wasserstein, jacksonDampingCoefficients, jackson_poly_coeffs
 from src.distribution import Distribution, mergeDistributions
 from src.optimizers import cvxpyL1Solver
@@ -72,18 +71,19 @@ def plot_vals(x=None, v1=None, v2=None, v1_lo=None, v1_hi=None, v2_lo=None, v2_h
 class testWrapper():
     def checkLanczosConvergence(self, method="naive", reorthogonalizeFlag=False):
         # this has been tested to work
+        # n=250
         trials = 5
-        n = 250
-        iterations = np.arange(10,250,10)
+        iterations = np.arange(10,100,10)
         error1 = np.zeros((trials, len(iterations)))
         error2 = np.zeros_like(error1)
         func = functionNameMapper(method)
         
         for t in tqdm(range(trials)):
             # in each trial init the matrix first
-            data = np.random.randn(n, n)
-            data = (data+data.T) / 2
-            data /= np.linalg.norm(data, ord=2)
+            # data = np.random.randn(n, n)
+            # data = (data+data.T) / 2
+            # data /= np.linalg.norm(data, ord=2)
+            data, n = get_data("low_rank_matrix")
             true_lambda, true_vecs = np.linalg.eig(data)
             true_lambda, true_vecs = sortValues(true_lambda, true_vecs)
             # plt.plot(range(len(true_lambda)), true_lambda)
@@ -136,15 +136,16 @@ class testWrapper():
         return None
     
     def test_lanczos(self, method="naive", reorthogonalizeFlag=False):
-        trials = 10
-        n = 250
+        trials = 1
+        # n = 250
         ks = np.array(list(range(10, 255, 5)))
         error = np.zeros((trials, len(ks)))
         func = functionNameMapper(method)
         
         for i in tqdm(range(trials)):
-            A = np.random.randn(n,n)
-            A = (A+A.T) / 2
+            # A = np.random.randn(n,n)
+            # A = (A+A.T) / 2
+            A, n = get_data("low_rank_matrix")
             A /= np.linalg.norm(A, ord=2)
             v = np.random.randn(n)
             v /= np.linalg.norm(v)
@@ -165,11 +166,14 @@ class testWrapper():
                 filename="lanczos/compare_lanczos_"+method+"_"+str(reorthogonalizeFlag))
         return None
     
+    
+    
     def testPlotEigVals(self, method="naive", reorthogonalizeFlag=False):
-        n= 250
-        iters = 250
-        A = np.random.randn(n,n)
-        A = (A+A.T) / 2
+        # n= 250
+        iters = 100
+        # A = np.random.randn(n,n)
+        # A = (A+A.T) / 2
+        A, n = get_data("low_rank_matrix")
         A /= np.linalg.norm(A, ord=2)
         v = np.random.randn(n)
         v /= np.linalg.norm(v)
@@ -179,21 +183,24 @@ class testWrapper():
         local_eigs = padZeros(local_eigs, n)
         global_eigs = np.real(np.linalg.eig(A)[0])
         global_eigs = np.sort(global_eigs)
-        plt.scatter(range(len(global_eigs)), global_eigs, color="blue")
-        plt.scatter(range(len(local_eigs)), local_eigs, color="red")
+        plt.scatter(range(len(global_eigs)), global_eigs, color="blue", label="true")
+        plt.scatter(range(len(local_eigs)), local_eigs, color="red", label="estimated eigavls")
+        plt.legend()
+        plt.title("iterations = "+str(iters)+", size=1000")
         plt.show()
         return None
 
     def checkEigenvalueAlignment(self, method="naive", reorthogonalizeFlag=False):
-        trials = 5
-        n = 250
+        trials = 1
+        # n = 250
         ks = np.array(list(range(10, 255, 5)))
         error = np.zeros((trials, len(ks)))
         func = functionNameMapper(method)
         
         for i in tqdm(range(trials)):
-            A = np.random.randn(n,n)
-            A = (A+A.T) / 2
+            # A = np.random.randn(n,n)
+            # A = (A+A.T) / 2
+            A, n = get_data("low_rank_matrix")
             A /= np.linalg.norm(A, ord=2)
             true_eigvals = np.real(np.linalg.eig(A)[0]) # true eigenvalues
             true_eigvals = np.sort(true_eigvals) # ascending order sort
@@ -221,6 +228,38 @@ class testWrapper():
         plt.savefig("figures/unittests/lanczos/EigenvalueAlignment_"+method+"_"+str(reorthogonalizeFlag)+".pdf", bbox_inches='tight',dpi=200)
         return None
     
+    def testErrorQTA(self, method="naive", reorthogonalizeFlag=False):
+        func = functionNameMapper(method)
+        iters = 100
+        delimiter = 10
+        
+        A, n = get_data("low_rank_matrix")
+        A /= np.linalg.norm(A, ord=2)
+        true_lambda = np.real(np.linalg.eig(A)[0])
+        v = np.random.randn(n)
+        v /= np.linalg.norm(v)
+        
+        Q = func(A, v, iters, return_type="Q", reorth=reorthogonalizeFlag)
+        
+        plt.imshow(Q, cmap="gray")
+        plt.colorbar()
+        plt.show()
+        
+        plt.imshow(Q.T@Q, cmap="gray")
+        plt.colorbar()
+        plt.show()
+        
+        Q_delimit = Q[:, delimiter:iters]
+        local_lambda = np.real(np.linalg.eig(Q_delimit.T @ A @ Q_delimit)[0])
+        
+        plt.scatter(range(len(local_lambda)), local_lambda, color="red", label="approx")
+        # plt.scatter(range(len(true_lambda)), true_lambda, color="blue", label="true")
+        plt.legend()
+        plt.title("iterations = "+str(iters)+", size=1000")
+        plt.show()
+        
+        return None
+    
     def lanczosDebugDriver(self, test="eig alignment", method="naive", orthogonalizeFlag=False):
         if test == "eig alignment":
             self.checkEigenvalueAlignment(method, orthogonalizeFlag)
@@ -231,8 +270,10 @@ class testWrapper():
             self.test_lanczos(method, orthogonalizeFlag)
         if test == "check eigs":
             self.testPlotEigVals(method, orthogonalizeFlag)
+        if test == "delimited":
+            self.testErrorQTA(method, orthogonalizeFlag)
         return None
         
     
 if __name__ == '__main__':
-    testWrapper().lanczosDebugDriver(test="check eigs", method="CTU", orthogonalizeFlag=True)
+    testWrapper().lanczosDebugDriver(test="convergence", method="CTU", orthogonalizeFlag=True)

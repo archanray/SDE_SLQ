@@ -5,6 +5,7 @@ from scipy.stats import ortho_group
 import scipy.io
 import urllib.request
 from scipy.sparse import csr_matrix
+import matplotlib.pyplot as plt
 
 def normalize_adj_sym(adj_mat):
     """
@@ -62,7 +63,7 @@ def get_data(name, seed=1):
             """
             as described in https://arxiv.org/pdf/2104.03461.pdf
             """
-            n = 60
+            n = 1000
             Lambda = np.random.normal(size=n)
             Lambda = Lambda / max(Lambda)
             V = ortho_group.rvs(n)
@@ -106,6 +107,30 @@ def get_data(name, seed=1):
             
             with open(file_path, "wb") as f:
                 np.save(f, data)
+            return data, len(data)
+        
+        if name == "small_large_diagonal" or name == "low_rank_matrix":
+            n = 1000
+            p = 10
+            if name == "small_large_diagonal":
+                small_vals = np.sort(np.random.randn(n-p) / 1e+10)
+            if name == "low_rank_matrix":
+                small_vals = np.zeros(n-p)
+            large_vals = np.sort(100*np.random.randn(p))
+            diagonal = np.concatenate((large_vals, small_vals))
+            data = np.diag(diagonal)
+            data /= np.linalg.norm(data, ord=2)
+            # plt.imshow(data, cmap="gray")
+            # plt.colorbar()
+            # plt.show()
+            return data, len(data)
+        
+        if name == "power_law_spectrum":
+            n = 1000
+            divisors = np.geomspace(1.0, np.power(2,n-1, dtype=float), num=n)
+            diagonal = np.divide(np.ones(n), divisors)
+            data = np.diag(diagonal)
+            data /= np.linalg.norm(data, ord=2)
             return data, len(data)
             
     return dataset, dataset_size
