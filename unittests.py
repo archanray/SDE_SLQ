@@ -328,26 +328,29 @@ class TestCalculations:
         return errors_mean, errors_lo, errors_hi
     
     def runSDEexperiments(self):
-        dataset = "hypercube"
-        data, n = get_data(dataset)
-        support_true = np.real(np.linalg.eigvals(data))
-        methods = ["SLQMM", "CMM", "KPM"]#["SLQMM", "CMM", "baseline_KPM"] #["CMM", "KPM", "baseline_KPM", "baseline_CMM", "exact_CMM"]
-        moments = list(range(4,60,4))
-        colors = ["red", "blue", "black"]
-        
-        for i in range(len(methods)):
-            errors_mean, errors_lo, errors_hi = self.checkSDEApproxError(data, moments, support_true, method=methods[i], cheb_vals=5000)
+        ds = ["gaussian", "uniform", "erdos992", "small_large_diagonal", "low_rank_matrix", "power_law_spectrum", "hypercube", "inverse_spectrum", "square_inverse_spectrum"]
+        for dataset in ds:
+            print("running for dataset:", dataset)
+            # dataset = "hypercube"
+            data, n = get_data(dataset)
+            support_true = np.real(np.linalg.eigvals(data))
+            methods = ["SLQMM", "CMM", "KPM"]#["SLQMM", "CMM", "baseline_KPM"] #["CMM", "KPM", "baseline_KPM", "baseline_CMM", "exact_CMM"]
+            moments = list(range(4,60,4))
+            colors = ["red", "blue", "black"]
             
-            plt.plot(moments, errors_mean, label=methods[i], color=colors[i])
-            plt.fill_between(moments, errors_lo, errors_hi, alpha=0.2, color=colors[i])
-        
-        plt.legend()
-        plt.ylabel("Wasserstein error")
-        plt.yscale("log")
-        plt.xlabel("Moments")
-        plt.yticks([10**0, 10**(-1), 10**(-2), 10**(-3)])
-        plt.grid()
-        plt.savefig("figures/unittests/SDE_approximation_error_"+dataset+"_test.pdf", bbox_inches='tight', dpi=200)
+            for i in range(len(methods)):
+                errors_mean, errors_lo, errors_hi = self.checkSDEApproxError(data, moments, support_true, method=methods[i], cheb_vals=5000)
+                
+                plt.plot(moments, errors_mean, label=methods[i], color=colors[i])
+                plt.fill_between(moments, errors_lo, errors_hi, alpha=0.2, color=colors[i])
+            
+            plt.legend()
+            plt.ylabel("Wasserstein error")
+            plt.yscale("log")
+            plt.xlabel("Moments")
+            plt.yticks([10**0, 10**(-1), 10**(-2), 10**(-3)])
+            plt.grid()
+            plt.savefig("figures/unittests/SDE_approximation_errors/"+dataset+"_test.pdf", bbox_inches='tight', dpi=200)
     
     def checkChebValNums(self):
         values = [1000]#np.arange(500,3000,500)

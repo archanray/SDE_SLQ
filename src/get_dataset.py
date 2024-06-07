@@ -125,9 +125,14 @@ def get_data(name, seed=1):
             # plt.show()
             return data, len(data)
         
-        if name == "power_law_spectrum":
+        if name == "power_law_spectrum" or name == "inverse_spectrum" or name == "square_inverse_spectrum":
             n = 1000
-            divisors = np.geomspace(1.0, np.power(2,n-1, dtype=float), num=n)
+            if name == "power_law_spectrum":
+                divisors = np.geomspace(1.0, np.power(2,n-1, dtype=float), num=n)
+            if name == "inverse_spectrum":
+                divisors = np.arange(1, n+1,1)
+            if name == "square_inverse_spectrum":
+                divisors = np.arange(1, n+1,1)**2
             diagonal = np.divide(np.ones(n), divisors)
             data = np.diag(diagonal)
             data /= np.linalg.norm(data, ord=2)

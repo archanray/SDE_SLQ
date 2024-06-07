@@ -24,7 +24,8 @@ def hutchMomentEstimator(A, N, l=1000, G=None):
     assert (N % 4 == 0)
     n = len(A)
     if G is None:
-        G = 2*np.random.binomial(1, 0.5, size=(n, l)) - 1.0
+        # G = 2*np.random.binomial(1, 0.5, size=(n, l)) - 1.0
+        G = np.random.normal(loc=0.,scale=1., size=(n, l))
     tau = np.zeros(N+1)
     Tkm2 = deepcopy(G)
     Tkm1 = np.dot(A, G)
