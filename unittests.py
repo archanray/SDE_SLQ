@@ -328,8 +328,8 @@ class TestCalculations:
         return errors_mean, errors_lo, errors_hi
     
     def runSDEexperiments(self):
-        # ds = ["gaussian", "uniform", "erdos992", "small_large_diagonal", "low_rank_matrix", "power_law_spectrum", "hypercube", "inverse_spectrum", "square_inverse_spectrum"]
-        ds = ["erdos992"]
+        ds = ["gaussian", "uniform", "erdos992", "small_large_diagonal", "low_rank_matrix", "power_law_spectrum", "hypercube", "inverse_spectrum", "square_inverse_spectrum"]
+        # ds = ["erdos992"]
         for dataset in ds:
             print("running for dataset:", dataset)
             # dataset = "hypercube"
@@ -352,7 +352,8 @@ class TestCalculations:
             plt.yticks([10**0, 10**(-1), 10**(-2), 10**(-3)])
             plt.grid()
             plt.savefig("figures/unittests/SDE_approximation_errors/"+dataset+"_test.pdf", bbox_inches='tight', dpi=200)
-            plt.clear()
+            plt.clf()
+            plt.close()
     
     def checkChebValNums(self):
         values = [1000]#np.arange(500,3000,500)

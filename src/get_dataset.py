@@ -123,6 +123,8 @@ def get_data(name, seed=1):
             # plt.imshow(data, cmap="gray")
             # plt.colorbar()
             # plt.show()
+            with open(file_path, "wb") as f:
+                np.save(f, data)
             return data, len(data)
         
         if name == "power_law_spectrum" or name == "inverse_spectrum" or name == "square_inverse_spectrum":
@@ -136,6 +138,8 @@ def get_data(name, seed=1):
             diagonal = np.divide(np.ones(n), divisors)
             data = np.diag(diagonal)
             data /= np.linalg.norm(data, ord=2)
+            with open(file_path, "wb") as f:
+                np.save(f, data)
             return data, len(data)
             
     return dataset, dataset_size
