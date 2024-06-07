@@ -3,7 +3,7 @@ from src.lanczos import naive_lanczos
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import os
-from src.moment_estimator import approxChebMomentMatching, discretizedJacksonDampedKPM, hutchMomentEstimator, baselineHutch, baselineKPM, baselineCMM, exactCMM, SLQMM, adder
+from src.moment_estimator import approxChebMomentMatching, discretizedJacksonDampedKPM, hutchMomentEstimator, SLQMM, VRSLQMM, adder
 from src.utils import Wasserstein, jacksonDampingCoefficients, jackson_poly_coeffs
 from src.distribution import Distribution, mergeDistributions
 from src.optimizers import cvxpyL1Solver
