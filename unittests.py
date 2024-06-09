@@ -271,31 +271,25 @@ class TestCalculations:
         rand_vecs = 2*np.random.binomial(1, 0.5, size=(n, 1000)) - 1
         
         tau_here = hutchMomentEstimator(data, moments, G=rand_vecs, l=1000)
-        tau_baseline = baselineHutch(data, moments, rand_vecs, l=1000)
+        tau_baseline = hutchMomentEstimator(data, moments, rand_vecs, l=1000)
         print(tau_here, "\n", tau_baseline)
         return None
     
-    def sdeComputer(self, data, degree, method = "CMM", cheb_vals=None, submethod="cvxpy", eigvals=None):
+    def sdeComputer(self, data, degree, method = "CMM", cheb_vals=None, submethod="cvxpy", eigvals=None, random_restarts=1):
         if method == "CMM":
-            tau = hutchMomentEstimator(data, degree, 5)
+            tau = hutchMomentEstimator(data, degree, random_restarts)
             supports, q = approxChebMomentMatching(tau, method=submethod, cheb_vals=cheb_vals)
             # print(supports, q)
             return supports, q
         if method == "KPM":
-            tau = hutchMomentEstimator(data, degree, 5)
+            tau = hutchMomentEstimator(data, degree, random_restarts)
             supports, q = discretizedJacksonDampedKPM(tau)
             return supports, q
-        if method == "baseline_KPM":
-            return baselineKPM(data, degree, 5)
-        if method == "baseline_CMM":
-            return baselineCMM(data, degree, cheb_vals)
-        if method == "exact_CMM":
-            return exactCMM(data, eigvals, degree, cheb_vals)
         if method == "SLQMM":
-            return SLQMM(data, degree, 5)
+            return SLQMM(data, degree, random_restarts)
         return None
     
-    def checkSDEApproxError(self, data, moments, support_true, method="CMM", cheb_vals=1000, trials=5, submethod="cvxpy"):
+    def checkSDEApproxError(self, data, moments, support_true, method="CMM", cheb_vals=1000, trials=5, submethod="cvxpy", random_restarts=1):
         quantile_lo = 10
         quantile_hi = 90
         errors = np.zeros((trials,len(moments)))
@@ -311,7 +305,7 @@ class TestCalculations:
             # axs[0].scatter(support_true, pdf_true, label="true")
             
             for j in range(len(moments)):
-                support_current, pdf_current = self.sdeComputer(data, moments[j], method = method, cheb_vals = cheb_vals, submethod=submethod, eigvals=eigvals)
+                support_current, pdf_current = self.sdeComputer(data, moments[j], method = method, cheb_vals = cheb_vals, submethod=submethod, eigvals=eigvals, random_restarts=random_restarts)
                 # if j == len(moments)-1:
                     # axs[0].scatter(support_current, pdf_current, label=str(moments[j]))
                 errors[t,j] = sp.stats.wasserstein_distance(support_true, support_current, pdf_true, pdf_current)
@@ -327,11 +321,12 @@ class TestCalculations:
         
         return errors_mean, errors_lo, errors_hi
     
-    def runSDEexperiments(self):
+    def runSDEexperiments(self, random_restarts=5):
         ds = ["gaussian", "uniform", "erdos992", "small_large_diagonal", "low_rank_matrix", "power_law_spectrum", "hypercube", "inverse_spectrum", "square_inverse_spectrum"]
         # ds = ["erdos992"]
         for dataset in ds:
             print("running for dataset:", dataset)
+            print("random restarts:", random_restarts)
             # dataset = "hypercube"
             data, n = get_data(dataset)
             support_true = np.real(np.linalg.eigvals(data))
@@ -340,10 +335,10 @@ class TestCalculations:
             colors = ["red", "blue", "black"]
             
             for i in range(len(methods)):
-                errors_mean, errors_lo, errors_hi = self.checkSDEApproxError(data, moments, support_true, method=methods[i], cheb_vals=5000)
+                errors_mean, errors_lo, errors_hi = self.checkSDEApproxError(data, moments, support_true, method=methods[i], cheb_vals=5000, random_restarts=random_restarts)
                 
-                plt.plot(5*moments, errors_mean, label=methods[i], color=colors[i])
-                plt.fill_between(5*moments, errors_lo, errors_hi, alpha=0.2, color=colors[i])
+                plt.plot(random_restarts*moments, errors_mean, label=methods[i], color=colors[i])
+                plt.fill_between(random_restarts*moments, errors_lo, errors_hi, alpha=0.2, color=colors[i])
             
             plt.legend()
             plt.ylabel("Wasserstein error")
@@ -351,7 +346,9 @@ class TestCalculations:
             plt.xlabel("Moments")
             plt.yticks([10**0, 10**(-1), 10**(-2), 10**(-3)])
             plt.grid()
-            plt.savefig("figures/unittests/SDE_approximation_errors/"+dataset+"_test.pdf", bbox_inches='tight', dpi=200)
+            if not os.path.isdir("figures/unittests/SDE_approximation_errors/"+str(random_restarts)):
+                os.makedirs("figures/unittests/SDE_approximation_errors/"+str(random_restarts))
+            plt.savefig("figures/unittests/SDE_approximation_errors/"+str(random_restarts)+"/"+dataset+"_test.pdf", bbox_inches='tight', dpi=200)
             plt.clf()
             plt.close()
     
@@ -396,4 +393,5 @@ class TestCalculations:
         return None
 
 if __name__ == '__main__':
-    TestCalculations().runSDEexperiments()
+    for i in [5,10,15,20,25]:
+        TestCalculations().runSDEexperiments(i)
