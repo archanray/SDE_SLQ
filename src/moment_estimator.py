@@ -127,8 +127,8 @@ def VRSLQMM(data, nv, k):
     n = len(data)
     V = np.random.randn(n,k)
     V /= np.linalg.norm(V, axis=0)
-    LambdaStore = np.zeros((k, nv))
-    WeightStore = np.zeros_like(LambdaStore)
+    LambdaStore = []
+    WeightStore = []
     for i in range(k):
         Q, T = CTU_lanczos(data, V[:, i], nv, reorth=True, return_type="QT")
         Lambda, Vectors = np.linalg.eig(T)
@@ -152,9 +152,11 @@ def VRSLQMM(data, nv, k):
         mask = np.ones_like(Lambda)
         mask[S_dash] = weights
         mask[S] = mask[S] / n
-        LambdaStore[i,:] = Lambda
-        WeightStore[i,:] = mask
+        LambdaStore.append(Lambda)
+        WeightStore.append(mask)
     # \sum_{i=1}^k \sum_{j=1}^{nv} (w_{ij}/k)*delta(x-\lambda_{ij})
+    LambdaStore = np.array(LambdaStore)
+    WeightStore = np.array(WeightStore)
     WeightStore /= k
     LambdaStore = LambdaStore.ravel()
     WeightStore = WeightStore.ravel()

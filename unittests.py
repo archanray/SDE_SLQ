@@ -345,7 +345,7 @@ class TestCalculations:
             plt.legend()
             plt.ylabel("Wasserstein error")
             plt.yscale("log")
-            plt.xlabel("Moments")
+            plt.xlabel("Total matric-vector queries")
             plt.yticks([10**0, 10**(-1), 10**(-2), 10**(-3)])
             plt.grid()
             if not os.path.isdir("figures/unittests/SDE_approximation_errors/"+str(random_restarts)):
