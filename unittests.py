@@ -337,7 +337,7 @@ class TestCalculations:
             support_true = np.real(np.linalg.eigvals(data))
             methods = ["SLQMM", "CMM", "KPM", "VRSLQMM"] #["CMM", "KPM", "SLQMM", "VRSLQMM"]
             moments = np.arange(4,60,4, dtype=int)
-            colors = ["red", "blue", "black", "goldenrod"]
+            colors = ["pink", "blue", "black", "goldenrod"]
             
             for i in range(len(methods)):
                 errors_mean, errors_lo, errors_hi = self.checkSDEApproxError(data, moments, support_true, method=methods[i], cheb_vals=5000, random_restarts=random_restarts)
@@ -346,8 +346,8 @@ class TestCalculations:
                     plt.plot(random_restarts*moments, errors_mean, label=methods[i], color=colors[i])
                     plt.fill_between(random_restarts*moments, errors_lo, errors_hi, alpha=0.2, color=colors[i])
                 else:
-                    plt.plot(1.5*random_restarts*moments, errors_mean, label=methods[i], color=colors[i])
-                    plt.fill_between(1.5*random_restarts*moments, errors_lo, errors_hi, alpha=0.2, color=colors[i])
+                    plt.plot(random_restarts*moments, errors_mean, label=methods[i], color=colors[i])
+                    plt.fill_between(random_restarts*moments, errors_lo, errors_hi, alpha=0.2, color=colors[i])
             
             plt.legend()
             plt.ylabel("Wasserstein error")
@@ -357,7 +357,7 @@ class TestCalculations:
             plt.grid()
             if not os.path.isdir("figures/unittests/SDE_approximation_errors/"+str(random_restarts)):
                 os.makedirs("figures/unittests/SDE_approximation_errors/"+str(random_restarts))
-            plt.savefig("figures/unittests/SDE_approximation_errors/"+str(random_restarts)+"/"+dataset+"_c12.pdf", bbox_inches='tight', dpi=200)
+            plt.savefig("figures/unittests/SDE_approximation_errors/"+str(random_restarts)+"/"+dataset+"_c2.pdf", bbox_inches='tight', dpi=200)
             plt.clf()
             plt.close()
     
