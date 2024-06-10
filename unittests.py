@@ -323,8 +323,11 @@ class TestCalculations:
         
         return errors_mean, errors_lo, errors_hi
     
-    def runSDEexperiments(self, random_restarts=5):
-        ds = ["gaussian", "uniform", "erdos992", "small_large_diagonal", "low_rank_matrix", "power_law_spectrum", "hypercube", "inverse_spectrum", "square_inverse_spectrum"]
+    def runSDEexperiments(self, random_restarts=5, dataset_names = "all"):
+        if dataset_names == "all":
+            ds = ["gaussian", "uniform", "erdos992", "small_large_diagonal", "low_rank_matrix", "power_law_spectrum", "hypercube", "inverse_spectrum", "square_inverse_spectrum"]
+        else:
+            ds = [dataset_names]
         # ds = ["erdos992"]
         for dataset in ds:
             print("running for dataset:", dataset)
@@ -332,15 +335,19 @@ class TestCalculations:
             # dataset = "hypercube"
             data, n = get_data(dataset)
             support_true = np.real(np.linalg.eigvals(data))
-            methods = ["SLQMM", "CMM", "KPM"] #["CMM", "KPM", "SLQMM", "VRSLQMM"]
+            methods = ["SLQMM", "CMM", "KPM", "VRSLQMM"] #["CMM", "KPM", "SLQMM", "VRSLQMM"]
             moments = np.arange(4,60,4, dtype=int)
-            colors = ["red", "blue", "black", "yellow"]
+            colors = ["red", "blue", "black", "goldenrod"]
             
             for i in range(len(methods)):
                 errors_mean, errors_lo, errors_hi = self.checkSDEApproxError(data, moments, support_true, method=methods[i], cheb_vals=5000, random_restarts=random_restarts)
                 
-                plt.plot(random_restarts*moments, errors_mean, label=methods[i], color=colors[i])
-                plt.fill_between(random_restarts*moments, errors_lo, errors_hi, alpha=0.2, color=colors[i])
+                if methods[i] != "VRSLQMM":
+                    plt.plot(random_restarts*moments, errors_mean, label=methods[i], color=colors[i])
+                    plt.fill_between(random_restarts*moments, errors_lo, errors_hi, alpha=0.2, color=colors[i])
+                else:
+                    plt.plot(1.5*random_restarts*moments, errors_mean, label=methods[i], color=colors[i])
+                    plt.fill_between(1.5*random_restarts*moments, errors_lo, errors_hi, alpha=0.2, color=colors[i])
             
             plt.legend()
             plt.ylabel("Wasserstein error")
@@ -350,7 +357,7 @@ class TestCalculations:
             plt.grid()
             if not os.path.isdir("figures/unittests/SDE_approximation_errors/"+str(random_restarts)):
                 os.makedirs("figures/unittests/SDE_approximation_errors/"+str(random_restarts))
-            plt.savefig("figures/unittests/SDE_approximation_errors/"+str(random_restarts)+"/"+dataset+"_test.pdf", bbox_inches='tight', dpi=200)
+            plt.savefig("figures/unittests/SDE_approximation_errors/"+str(random_restarts)+"/"+dataset+"_c12.pdf", bbox_inches='tight', dpi=200)
             plt.clf()
             plt.close()
     
@@ -395,6 +402,7 @@ class TestCalculations:
         return None
 
 if __name__ == '__main__':
-    mults = [5,10,15,20,25]
-    for i in [5,10,15,20,25]:
-        TestCalculations().runSDEexperiments(i)
+    mults = [5] # [5,10,15,20,25]
+    dataset_names = "all" # "all"
+    for i in mults:
+        TestCalculations().runSDEexperiments(i, dataset_names)

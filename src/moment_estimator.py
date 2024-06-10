@@ -120,31 +120,34 @@ def SLQMM(data, nv, k):
     # print("outside:", np.mean(LambdaStore, axis=0))
     return LambdaStore, WeightStore
 
-def VRSLQMM(data, nv, k):
+def VRSLQMM(data, m, k):
     # assumption:
-    # l = nv/2
-    l = nv/2
+    # 1. l = nv/2
+    l = int(m/2)
     n = len(data)
     V = np.random.randn(n,k)
     V /= np.linalg.norm(V, axis=0)
     LambdaStore = []
     WeightStore = []
     for i in range(k):
-        Q, T = CTU_lanczos(data, V[:, i], nv, reorth=True, return_type="QT")
+        Q, T = CTU_lanczos(data, V[:, i], m, reorth=True, return_type="QT")
         Lambda, Vectors = np.linalg.eig(T)
         # Lambda, Vectors = sortEigValues(Lambda, Vectors)
         # print("inside:", Lambda)
         S = []
+        S_dash = []
         # assumptions (we can play around this): 
         # 1. the bound on the first constraint is 1/(n**2)
         # 2. bound on the second constraint is 2/n
-        for j in range(nv):
-            constraint1 = np.linalg.norm(data @ Q @ Vectors[:,j] - Lambda[j]*Q @ Vectors[:,j]) <= 1/(n**2)
+        for j in range(l):
+            QV = Q @ Vectors[:,j]
+            constraint1 = np.linalg.norm(data @ QV - Lambda[j]*QV) <= 1/(n**2) # True
             constraint2 = Vectors[0,j]**2 <= 2/n
             if constraint1 and constraint2:
                 S.append(j)
-                
-        S_dash = list(set(range(nv)) - set(S))
+            else:
+                S_dash.append(j)
+        S_dash = S_dash + list(range(l,m))
         # L2 = Lambda[S_dash]
         # V2 = Vectors[:, S_dash]
         weights = np.square(Vectors[0,S_dash])
