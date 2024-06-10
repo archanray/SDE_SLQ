@@ -287,6 +287,8 @@ class TestCalculations:
             return supports, q
         if method == "SLQMM":
             return SLQMM(data, degree, random_restarts)
+        if method == "VRSLQMM":
+            return VRSLQMM(data, degree, random_restarts)
         return None
     
     def checkSDEApproxError(self, data, moments, support_true, method="CMM", cheb_vals=1000, trials=5, submethod="cvxpy", random_restarts=1):
@@ -330,9 +332,9 @@ class TestCalculations:
             # dataset = "hypercube"
             data, n = get_data(dataset)
             support_true = np.real(np.linalg.eigvals(data))
-            methods = ["SLQMM", "CMM", "KPM"]#["SLQMM", "CMM", "baseline_KPM"] #["CMM", "KPM", "baseline_KPM", "baseline_CMM", "exact_CMM"]
+            methods = ["SLQMM", "CMM", "KPM"] #["CMM", "KPM", "SLQMM", "VRSLQMM"]
             moments = np.arange(4,60,4, dtype=int)
-            colors = ["red", "blue", "black"]
+            colors = ["red", "blue", "black", "yellow"]
             
             for i in range(len(methods)):
                 errors_mean, errors_lo, errors_hi = self.checkSDEApproxError(data, moments, support_true, method=methods[i], cheb_vals=5000, random_restarts=random_restarts)
@@ -393,5 +395,6 @@ class TestCalculations:
         return None
 
 if __name__ == '__main__':
+    mults = [5,10,15,20,25]
     for i in [5,10,15,20,25]:
         TestCalculations().runSDEexperiments(i)

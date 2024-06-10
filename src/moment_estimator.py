@@ -121,6 +121,9 @@ def SLQMM(data, nv, k):
     return LambdaStore, WeightStore
 
 def VRSLQMM(data, nv, k):
+    # assumption:
+    # l = nv/2
+    l = nv/2
     n = len(data)
     V = np.random.randn(n,k)
     V /= np.linalg.norm(V, axis=0)
@@ -131,9 +134,26 @@ def VRSLQMM(data, nv, k):
         Lambda, Vectors = np.linalg.eig(T)
         # Lambda, Vectors = sortEigValues(Lambda, Vectors)
         # print("inside:", Lambda)
-        weights = np.square(Vectors[0,:])
+        S = []
+        # assumptions (we can play around this): 
+        # 1. the bound on the first constraint is 1/(n**2)
+        # 2. bound on the second constraint is 2/n
+        for j in range(nv):
+            constraint1 = np.linalg.norm(data @ Q @ Vectors[:,j] - Lambda[j]*Q @ Vectors[:,j]) <= 1/(n**2)
+            constraint2 = Vectors[0,j]**2 <= 2/n
+            if constraint1 and constraint2:
+                S.append(j)
+                
+        S_dash = list(set(range(nv)) - set(S))
+        # L2 = Lambda[S_dash]
+        # V2 = Vectors[:, S_dash]
+        weights = np.square(Vectors[0,S_dash])
+        weights = ((1-(len(S)/n)) / np.sum(weights))*weights
+        mask = np.ones_like(Lambda)
+        mask[S_dash] = weights
+        mask[S] = mask[S] / n
         LambdaStore[i,:] = Lambda
-        WeightStore[i,:] = weights
+        WeightStore[i,:] = mask
     # \sum_{i=1}^k \sum_{j=1}^{nv} (w_{ij}/k)*delta(x-\lambda_{ij})
     WeightStore /= k
     LambdaStore = LambdaStore.ravel()
