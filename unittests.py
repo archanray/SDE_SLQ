@@ -347,7 +347,7 @@ class TestCalculations:
             
             for i in range(len(methods)):
                 # set up file name
-                filename = foldername+"/"+methods+".pkl"
+                filename = foldername+"/"+methods[i]+".pkl"
                 # check if file with results exist, if yes load, else run code
                 if os.path.isfile(filename) and loadresults[i] == True:
                     file_ = open(filename, "rb")
