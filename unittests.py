@@ -357,7 +357,7 @@ class TestCalculations:
                     errors_mean, errors_lo, errors_hi = self.checkSDEApproxError(data, moments, support_true, method=methods[i], cheb_vals=5000, random_restarts=random_restarts)
                     # save results to filename
                     file_ = open(filename, "wb")
-                    pickle.dump(file_, [errors_mean, errors_lo, errors_hi])
+                    pickle.dump([errors_mean, errors_lo, errors_hi], file_)
                     file_.close()
                 
                 plt.plot(random_restarts*moments, errors_mean, label=methods[i], color=colors[i])
