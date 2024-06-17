@@ -17,6 +17,7 @@ from src.optimizers import pgdSolver
 import numpy.polynomial as poly
 import sys
 import seaborn as sns
+import pickle
 
 def findMaxIndex(L1):
     if np.abs(L1[-1]) > np.abs(L1[0]):
@@ -323,7 +324,7 @@ class TestCalculations:
         
         return errors_mean, errors_lo, errors_hi
     
-    def runSDEexperiments(self, random_restarts=5, dataset_names = "all"):
+    def runSDEexperiments(self, random_restarts=5, dataset_names = "all", loadresults = [True, True, True, True]):
         if dataset_names == "all":
             ds = ["gaussian", "uniform", "erdos992", "small_large_diagonal", "low_rank_matrix", "power_law_spectrum", "hypercube", "inverse_spectrum", "square_inverse_spectrum"]
         else:
@@ -337,17 +338,37 @@ class TestCalculations:
             support_true = np.real(np.linalg.eigvals(data))
             methods = ["SLQMM", "CMM", "KPM", "VRSLQMM"] #["CMM", "KPM", "SLQMM", "VRSLQMM"]
             moments = np.arange(4,60,4, dtype=int)
-            colors = ["pink", "blue", "black", "goldenrod"]
+            # colors chosen from https://matplotlib.org/stable/gallery/color/named_colors.html
+            colors = ["hotpink", "blue", "black", "darkorange", "mediumpurple"]
+            
+            foldername = "outputs/"+dataset
+            if not os.path.isdir(foldername):
+                os.makedirs(foldername)
             
             for i in range(len(methods)):
-                errors_mean, errors_lo, errors_hi = self.checkSDEApproxError(data, moments, support_true, method=methods[i], cheb_vals=5000, random_restarts=random_restarts)
-                
-                if methods[i] != "VRSLQMM":
-                    plt.plot(random_restarts*moments, errors_mean, label=methods[i], color=colors[i])
-                    plt.fill_between(random_restarts*moments, errors_lo, errors_hi, alpha=0.2, color=colors[i])
+                # set up file name
+                filename = foldername+"/"+methods+".pkl"
+                # check if file with results exist, if yes load, else run code
+                if os.path.isfile(filename) and loadresults[i] == True:
+                    file_ = open(filename, "rb")
+                    errors_mean, errors_lo, errors_hi = pickle.load(file_)
+                    file_.close()
                 else:
-                    plt.plot(random_restarts*moments, errors_mean, label=methods[i], color=colors[i])
-                    plt.fill_between(random_restarts*moments, errors_lo, errors_hi, alpha=0.2, color=colors[i])
+                    errors_mean, errors_lo, errors_hi = self.checkSDEApproxError(data, moments, support_true, method=methods[i], cheb_vals=5000, random_restarts=random_restarts)
+                    # save results to filename
+                    file_ = open(filename, "wb")
+                    pickle.dump(file_, [errors_mean, errors_lo, errors_hi])
+                    file_.close()
+                
+                plt.plot(random_restarts*moments, errors_mean, label=methods[i], color=colors[i])
+                plt.fill_between(random_restarts*moments, errors_lo, errors_hi, alpha=0.2, color=colors[i])
+                
+                # if methods[i] != "VRSLQMM":
+                #     plt.plot(random_restarts*moments, errors_mean, label=methods[i], color=colors[i])
+                #     plt.fill_between(random_restarts*moments, errors_lo, errors_hi, alpha=0.2, color=colors[i])
+                # else:
+                #     plt.plot(random_restarts*moments, errors_mean, label=methods[i], color=colors[i])
+                #     plt.fill_between(random_restarts*moments, errors_lo, errors_hi, alpha=0.2, color=colors[i])
             
             plt.legend()
             plt.ylabel("Wasserstein error")
@@ -357,7 +378,7 @@ class TestCalculations:
             plt.grid()
             if not os.path.isdir("figures/unittests/SDE_approximation_errors/"+str(random_restarts)):
                 os.makedirs("figures/unittests/SDE_approximation_errors/"+str(random_restarts))
-            plt.savefig("figures/unittests/SDE_approximation_errors/"+str(random_restarts)+"/"+dataset+"_c2.pdf", bbox_inches='tight', dpi=200)
+            plt.savefig("figures/unittests/SDE_approximation_errors/"+str(random_restarts)+"/"+dataset+"_c12.pdf", bbox_inches='tight', dpi=200)
             plt.clf()
             plt.close()
     
@@ -405,4 +426,4 @@ if __name__ == '__main__':
     mults = [5] # [5,10,15,20,25]
     dataset_names = "all" # "all"
     for i in mults:
-        TestCalculations().runSDEexperiments(i, dataset_names)
+        TestCalculations().runSDEexperiments(i, dataset_names, [True, True, True, True])

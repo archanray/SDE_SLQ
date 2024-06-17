@@ -122,8 +122,8 @@ def SLQMM(data, nv, k):
 
 def VRSLQMM(data, m, k):
     # assumption:
-    # 1. l = nv/2
-    l = int(m/2)
+    # 1. l = nv/4
+    l = int(m/4)
     n = len(data)
     V = np.random.randn(n,k)
     V /= np.linalg.norm(V, axis=0)
@@ -141,7 +141,7 @@ def VRSLQMM(data, m, k):
         # 2. bound on the second constraint is 2/n
         for j in range(l):
             QV = Q @ Vectors[:,j]
-            constraint1 = True # np.linalg.norm(data @ QV - Lambda[j]*QV) <= 1/(n**2)
+            constraint1 = np.linalg.norm(data @ QV - Lambda[j]*QV) <= 1/(n**2)
             constraint2 = Vectors[0,j]**2 <= 2/n
             if constraint1 and constraint2:
                 S.append(j)
