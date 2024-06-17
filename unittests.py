@@ -341,13 +341,13 @@ class TestCalculations:
             # colors chosen from https://matplotlib.org/stable/gallery/color/named_colors.html
             colors = ["red", "blue", "black", "goldenrod", "mediumpurple"]
             
-            foldername = "outputs/"+dataset
+            foldername = "outputs/"+dataset+"/"+str(random_restarts)
             if not os.path.isdir(foldername):
                 os.makedirs(foldername)
             
             for i in range(len(methods)):
                 # set up file name
-                filename = foldername+"/"+str(random_restarts)+"/"+methods[i]+".pkl"
+                filename = foldername+"/"+methods[i]+".pkl"
                 # check if file with results exist, if yes load, else run code
                 if os.path.isfile(filename) and loadresults[i] == True:
                     file_ = open(filename, "rb")
