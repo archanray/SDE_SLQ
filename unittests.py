@@ -339,7 +339,7 @@ class TestCalculations:
             methods = ["SLQMM", "CMM", "KPM", "VRSLQMM"] #["CMM", "KPM", "SLQMM", "VRSLQMM"]
             moments = np.arange(4,60,4, dtype=int)
             # colors chosen from https://matplotlib.org/stable/gallery/color/named_colors.html
-            colors = ["hotpink", "blue", "black", "darkorange", "mediumpurple"]
+            colors = ["red", "blue", "black", "goldenrod", "mediumpurple"]
             
             foldername = "outputs/"+dataset
             if not os.path.isdir(foldername):
@@ -347,7 +347,7 @@ class TestCalculations:
             
             for i in range(len(methods)):
                 # set up file name
-                filename = foldername+"/"+methods[i]+".pkl"
+                filename = foldername+"/"+str(random_restarts)+"/"+methods[i]+".pkl"
                 # check if file with results exist, if yes load, else run code
                 if os.path.isfile(filename) and loadresults[i] == True:
                     file_ = open(filename, "rb")
@@ -357,7 +357,7 @@ class TestCalculations:
                     errors_mean, errors_lo, errors_hi = self.checkSDEApproxError(data, moments, support_true, method=methods[i], cheb_vals=5000, random_restarts=random_restarts)
                     # save results to filename
                     file_ = open(filename, "wb")
-                    pickle.dump([errors_mean, errors_lo, errors_hi], file_)
+                    pickle.dump(file_, [errors_mean, errors_lo, errors_hi])
                     file_.close()
                 
                 plt.plot(random_restarts*moments, errors_mean, label=methods[i], color=colors[i])
