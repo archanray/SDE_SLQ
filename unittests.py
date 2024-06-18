@@ -339,7 +339,7 @@ class TestCalculations:
             methods = ["SLQMM", "CMM", "KPM", "VRSLQMM"] #["CMM", "KPM", "SLQMM", "VRSLQMM"]
             moments = np.arange(4,60,4, dtype=int)
             # colors chosen from https://matplotlib.org/stable/gallery/color/named_colors.html
-            colors = ["red", "blue", "black", "goldenrod", "mediumpurple"]
+            colors = ["red", "dodgerblue", "black", "darkgoldenrod", "darkorchid"]
             
             foldername = "outputs/"+dataset+"/"+str(random_restarts)
             if not os.path.isdir(foldername):
