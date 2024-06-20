@@ -335,7 +335,15 @@ class TestCalculations:
             print("random restarts:", random_restarts)
             # dataset = "hypercube"
             data, n = get_data(dataset)
-            support_true = np.real(np.linalg.eigvals(data))
+            eigs_folder = "outputs/"+dataset+"/"
+            if not os.path.isdir(eigs_folder):
+                os.makedirs(eigs_folder)
+            eigs_file = eigs_folder+"true_eigvals.npy"
+            if os.path.isfile(eigs_file):
+                support_true = np.load(eigs_file)
+            else:
+                support_true = np.real(np.linalg.eigvals(data))
+                np.save(eigs_file, support_true)
             methods = ["SLQMM", "CMM", "KPM", "VRSLQMM"] #["CMM", "KPM", "SLQMM", "VRSLQMM"]
             moments = np.arange(4,60,4, dtype=int)
             # colors chosen from https://matplotlib.org/stable/gallery/color/named_colors.html
@@ -426,4 +434,4 @@ if __name__ == '__main__':
     mults = [5,10,15,20,25]
     dataset_names = "all" # "all"
     for i in mults:
-        TestCalculations().runSDEexperiments(i, dataset_names, [True, True, True, True])
+        TestCalculations().runSDEexperiments(i, dataset_names, [True, True, True, False])
