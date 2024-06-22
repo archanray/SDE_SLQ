@@ -120,10 +120,10 @@ def SLQMM(data, nv, k):
     # print("outside:", np.mean(LambdaStore, axis=0))
     return LambdaStore, WeightStore
 
-def VRSLQMM(data, m, k):
+def VRSLQMM(data, m, k, constraints="12"):
     # assumption:
     # 1. l = nv/4
-    l = int(m/4)
+    l = int(m/10)
     n = len(data)
     V = np.random.randn(n,k)
     V /= np.linalg.norm(V, axis=0)
@@ -141,8 +141,14 @@ def VRSLQMM(data, m, k):
         # 2. bound on the second constraint is 2/n
         for j in range(l):
             QV = Q @ Vectors[:,j]
-            constraint1 = np.linalg.norm(data @ QV - Lambda[j]*QV) <= 1/(n**2)
-            constraint2 = Vectors[0,j]**2 <= 2/n
+            if "1" in constraints:
+                constraint1 = np.linalg.norm(data @ QV - Lambda[j]*QV) <= 25/(n**2)
+            else:
+                constraint1 = True
+            if "2" in constraints:
+                constraint2 = Vectors[0,j]**2 <= 5/n
+            else:
+                constraint2 = True
             if constraint1 and constraint2:
                 S.append(j)
             else:

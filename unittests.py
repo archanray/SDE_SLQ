@@ -288,8 +288,12 @@ class TestCalculations:
             return supports, q
         if method == "SLQMM":
             return SLQMM(data, degree, random_restarts)
-        if method == "VRSLQMM":
-            return VRSLQMM(data, degree, random_restarts)
+        if method == "VRSLQMM-c12":
+            return VRSLQMM(data, degree, random_restarts, constraints="12")
+        if method == "VRSLQMM-c1":
+            return VRSLQMM(data, degree, random_restarts, constraints="1")
+        if method == "VRSLQMM-c2":
+            return VRSLQMM(data, degree, random_restarts, constraints="2")
         return None
     
     def checkSDEApproxError(self, data, moments, support_true, method="CMM", cheb_vals=1000, trials=5, submethod="cvxpy", random_restarts=1):
@@ -324,12 +328,22 @@ class TestCalculations:
         
         return errors_mean, errors_lo, errors_hi
     
-    def runSDEexperiments(self, random_restarts=5, dataset_names = "all", loadresults = [True, True, True, True]):
+    def runSDEexperiments(self, random_restarts=5, dataset_names = "all", methods = ["all"], loadresults = [True, True, True, True, True, True]):
+        # colors chosen from https://matplotlib.org/stable/gallery/color/named_colors.html
+        colors = ["red", "dodgerblue", "black", "darkgoldenrod", "darkorchid", "green"]
+        
         if dataset_names == "all":
             ds = ["gaussian", "uniform", "erdos992", "small_large_diagonal", "low_rank_matrix", "power_law_spectrum", "hypercube", "inverse_spectrum", "square_inverse_spectrum"]
         else:
             ds = [dataset_names]
         # ds = ["erdos992"]
+        if methods[-1] == "all":
+            methods = ["SLQMM", "CMM", "KPM", "VRSLQMM-c1", "VRSLQMM-c2", "VRSLQMM-c12"]
+        else:
+            pass
+        if len(loadresults) != len(methods):
+            print("loadresults should be of same size")
+            sys.exit(1)
         for dataset in ds:
             print("running for dataset:", dataset)
             print("random restarts:", random_restarts)
@@ -344,10 +358,8 @@ class TestCalculations:
             else:
                 support_true = np.real(np.linalg.eigvals(data))
                 np.save(eigs_file, support_true)
-            methods = ["SLQMM", "CMM", "KPM", "VRSLQMM"] #["CMM", "KPM", "SLQMM", "VRSLQMM"]
+            # set up moments
             moments = np.arange(4,60,4, dtype=int)
-            # colors chosen from https://matplotlib.org/stable/gallery/color/named_colors.html
-            colors = ["red", "dodgerblue", "black", "darkgoldenrod", "darkorchid"]
             
             foldername = "outputs/"+dataset+"/"+str(random_restarts)
             if not os.path.isdir(foldername):
@@ -386,7 +398,7 @@ class TestCalculations:
             plt.grid()
             if not os.path.isdir("figures/unittests/SDE_approximation_errors/"+str(random_restarts)):
                 os.makedirs("figures/unittests/SDE_approximation_errors/"+str(random_restarts))
-            plt.savefig("figures/unittests/SDE_approximation_errors/"+str(random_restarts)+"/"+dataset+"_c12.pdf", bbox_inches='tight', dpi=200)
+            plt.savefig("figures/unittests/SDE_approximation_errors/"+str(random_restarts)+"/"+dataset+".pdf", bbox_inches='tight', dpi=200)
             plt.clf()
             plt.close()
     
@@ -431,7 +443,9 @@ class TestCalculations:
         return None
 
 if __name__ == '__main__':
-    mults = [5,10,15,20,25]
+    mults = [5] #[5,10,15,20,25]
     dataset_names = "all" # "all"
+    methods = ["SLQMM", "CMM", "KPM", "VRSLQMM-c1", "VRSLQMM-c2", "VRSLQMM-c12"]
+    loadresults = [True, True, True, False, False, False]
     for i in mults:
-        TestCalculations().runSDEexperiments(i, dataset_names, [True, True, True, False])
+        TestCalculations().runSDEexperiments(i, dataset_names, methods, loadresults)
