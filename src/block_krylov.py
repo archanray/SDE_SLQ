@@ -11,7 +11,7 @@ def bki(A, k=1, q=10):
     c -- multiplier
 
     Outputs:
-    Z -- n times k matrix
+    Q -- n times k matrix
     matvecs -- number of matrix vector products on A, the input matrix
     """
     n, d = A.shape[0], A.shape[1]
@@ -34,12 +34,5 @@ def bki(A, k=1, q=10):
     # orthonormalizing columns of K
     Q, R = np.linalg.qr(K)
 
-    # # compute M
-    # QA = np.dot(Q.T, A)
-    # M = np.dot(QA, QA.T)
-
-    # # compute SVD of M
-    # L, V = np.linalg.eig(M)
-    # Uk = V[:, :k]
-
-    return Q #@ Uk, L[:k]
+    # return first k columns of Q
+    return Q[:, list(range(k))]

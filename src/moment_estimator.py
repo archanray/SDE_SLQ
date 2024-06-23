@@ -174,16 +174,22 @@ def VRSLQMM(data, m, k, constraints="12"):
     # print("outside:", np.mean(LambdaStore, axis=0))
     return LambdaStore, WeightStore
 
-def bkde(A, k, l, seed=0, MM="cheb", cheb_vals=1000):
+def bkde(A, k, bki_iters, seed=0, MM="cheb", cheb_vals=1000):
     """
     implements sde using block krylov deflation and SDE of BKM22
+    A: data
+    k: block-size in krylov
+    bki_iters: block krylov iters
     """
     np.random.seed(seed)
     n = len(A)
-    iters = 10 # vary krylov iters here ############################################################
-    r = 5 # set r accordingly ############################################################
-    Q = bki(A, k, iters)
-    # matvecs here is free as K is already computed
+    
+    # parameters
+    r = k # since Q will be of size n x k
+    
+    # get Q from block krylov
+    Q = bki(A, k, bki_iters) # matvecs= iters x k
+    # matvecs here is free since K is already computed
     T = Q.T @ A @ Q
     Lambda, Vectors = np.linalg.eig(T)
     S = []
@@ -193,6 +199,7 @@ def bkde(A, k, l, seed=0, MM="cheb", cheb_vals=1000):
         if np.linalg.norm((A @ QV) - (Lambda[j]*QV), ord=2) <= (1/n**2):
             S.append(j)
     
+    # store converged Q and lambdas
     Z = Q @ Vectors[:, S]
     LsubS = Lambda[S]
     
@@ -200,23 +207,25 @@ def bkde(A, k, l, seed=0, MM="cheb", cheb_vals=1000):
     q1_supports = LsubS
     q1_weights = np.ones_like(LsubS) / len(LsubS)
     
-    # filter the Zs and lambdas here
+    # compute P and then L here
     P = np.eye(n) - np.dot(Z, Z.T)
-    L = n # upper bound on PAP l2 norm, can do 1
+    L = 1 # upper bound on PAP l2 norm, can do 1 or n, should I be calculating this using hutchinson?
+    
     # approximate moments
-    # l is taken as an argument, so l matvecs
-    tau = hutchMomentEstimator(np.dot(P, np.dot(A, P))/L, k, l)
+    # ell can be very small, so ell matvecs
+    ell = int(n/4)
+    tau = hutchMomentEstimator((P.T @ A @ P)/L, k, ell)
     tau = (1 / (n-len(S))) * (n*tau - len(S) * normalizedChebyPolyFixedPoint(0, len(tau)))
     
     if MM == "cheb":
-        supports, gx = approxChebMomentMatching(tau, cheb_vals=cheb_vals)
+        supports, weights = approxChebMomentMatching(tau, cheb_vals=cheb_vals)
     else:
-        supports, gx = discretizedJacksonDampedKPM(tau)
+        supports, weights = discretizedJacksonDampedKPM(tau)
     
     # filtering
     mask = (np.abs(supports) < L).astype(int)
     q2_supports = supports * mask
-    q2_weights = gx * mask
+    q2_weights = weights * mask
     
     q1_weights = (len(S) / n) * q1_weights
     q2_weights = ((n-len(S)) / n) * q2_weights
