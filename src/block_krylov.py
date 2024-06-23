@@ -34,12 +34,12 @@ def bki(A, k=1, q=10):
     # orthonormalizing columns of K
     Q, R = np.linalg.qr(K)
 
-    # compute M
-    QA = np.dot(Q.T, A)
-    M = np.dot(QA, QA.T)
+    # # compute M
+    # QA = np.dot(Q.T, A)
+    # M = np.dot(QA, QA.T)
 
-    # compute SVD of M
-    L, V = np.linalg.eig(M)
-    Uk = V[:, :k]
+    # # compute SVD of M
+    # L, V = np.linalg.eig(M)
+    # Uk = V[:, :k]
 
-    return Q @ Uk, L[:k]
+    return Q #@ Uk, L[:k]

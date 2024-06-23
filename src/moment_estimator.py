@@ -10,6 +10,7 @@ import numpy.polynomial as poly
 import src.pgd as pgd
 from src.lanczos import CTU_lanczos
 from src.distribution import Distribution, mergeDistributions
+from block_krylov import bki
 
 def adder(l):
     def valCal(v1, v2):
@@ -172,3 +173,45 @@ def VRSLQMM(data, m, k, constraints="12"):
     LambdaStore, WeightStore = aggregator(LambdaStore, WeightStore)
     # print("outside:", np.mean(LambdaStore, axis=0))
     return LambdaStore, WeightStore
+
+def bkde(A, k, l, seed=0):
+    """
+    implements sde using block krylov deflation and SDE of BKM22
+    """
+    np.random.seed(seed)
+    n = len(A)
+    iters = 10 # vary krylov iters here ############################################################
+    r = 5 # set r accordingly ############################################################
+    Q = bki(A, k, iters)
+    T = Q.T @ A @ Q
+    Lambda, Vectors = np.linalg.eig(T)
+    S = []
+    for j in range(r):
+        QV = Q @ Vectors[:,j]
+        if np.linalg.norm((A @ QV) - (Lambda[j]*QV), ord=2) <= (1/n**2):
+            S.append(j)
+    
+    Z = Q @ Vectors[:, S]
+    LsubS = Lambda[S]
+    
+    # filter the Zs and lambdas here
+    P = np.eye(n) - np.dot(Z, Z.T)
+    L = n
+    # approximate moments
+    fx = hutchMomentEstimator(np.dot(P, np.dot(A, P))/L, k, l)
+    fx = (n / (n-k)) * fx - (k / (n-k)) * normalizedChebyPolyFixedPoint(0, len(fx))
+    supports, gx = approxChebMomentMatching(fx)
+    
+    # assuming gx is a distribution
+    new_supports = []
+    new_ps = []
+    for i in range(len(supports)):
+        key = supports[i]
+        if -1 <= key <= 1:
+            new_supports.append(key*L)
+            new_ps.append(gx[i])
+    D2 = Distribution(np.array(new_supports), np.array(new_ps))
+    
+    D1 = Distribution(Lambda, np.ones_like(Lambda)/k)
+    outputDistro = mergeDistributions(D1, D2, aggregator(k, n))
+    return outputDistro
