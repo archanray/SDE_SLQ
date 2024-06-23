@@ -384,15 +384,16 @@ class TestCalculations:
                     pickle.dump([errors_mean, errors_lo, errors_hi], file_)
                     file_.close()
                 
-                plt.plot(random_restarts*moments, errors_mean, label=methods[i], color=colors[i])
-                plt.fill_between(random_restarts*moments, errors_lo, errors_hi, alpha=0.2, color=colors[i])
+                # plt.plot(random_restarts*moments, errors_mean, label=methods[i], color=colors[i])
+                # plt.fill_between(random_restarts*moments, errors_lo, errors_hi, alpha=0.2, color=colors[i])
                 
-                # if methods[i] != "VRSLQMM":
-                #     plt.plot(random_restarts*moments, errors_mean, label=methods[i], color=colors[i])
-                #     plt.fill_between(random_restarts*moments, errors_lo, errors_hi, alpha=0.2, color=colors[i])
-                # else:
-                #     plt.plot(random_restarts*moments, errors_mean, label=methods[i], color=colors[i])
-                #     plt.fill_between(random_restarts*moments, errors_lo, errors_hi, alpha=0.2, color=colors[i])
+                if "BKSDE" not in methods[i]:
+                    plt.plot(random_restarts*moments, errors_mean, label=methods[i], color=colors[i])
+                    plt.fill_between(random_restarts*moments, errors_lo, errors_hi, alpha=0.2, color=colors[i])
+                else:
+                    matvecs = np.array(random_restarts*moments) + 100*n//4 # n//4 is the matvecs used in hutch
+                    plt.plot(matvecs, errors_mean, label=methods[i], color=colors[i])
+                    plt.fill_between(matvecs, errors_lo, errors_hi, alpha=0.2, color=colors[i])
             
             plt.legend()
             plt.ylabel("Wasserstein error")
@@ -450,6 +451,6 @@ if __name__ == '__main__':
     mults = [5] #[5,10,15,20,25]
     dataset_names = "all" # "all"
     methods = ["SLQMM", "CMM", "KPM", "VRSLQMM-c12", "BKSDE-CMM", "BKSDE-KPM"]# ["SLQMM", "CMM", "KPM", "VRSLQMM-c1", "VRSLQMM-c2", "VRSLQMM-c12"]
-    loadresults = [True, True, True, True, True, False, False]
+    loadresults = [True, True, True, True, False, False]
     for i in mults:
         TestCalculations().runSDEexperiments(i, dataset_names, methods, loadresults)

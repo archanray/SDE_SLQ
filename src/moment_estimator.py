@@ -10,7 +10,7 @@ import numpy.polynomial as poly
 import src.pgd as pgd
 from src.lanczos import CTU_lanczos
 from src.distribution import Distribution, mergeDistributions
-from block_krylov import bki
+from src.block_krylov import bki
 
 def adder(l):
     def valCal(v1, v2):
@@ -212,9 +212,10 @@ def bkde(A, k, bki_iters, seed=0, MM="cheb", cheb_vals=1000):
     L = 1 # upper bound on PAP l2 norm, can do 1 or n, should I be calculating this using hutchinson?
     
     # approximate moments
-    # ell can be very small, so ell matvecs
+    # ell can be very small, so ell*k matvecs
     ell = int(n/4)
-    tau = hutchMomentEstimator((P.T @ A @ P)/L, k, ell)
+    N_hutch = 100
+    tau = hutchMomentEstimator((P.T @ A @ P)/L, N_hutch, ell)
     tau = (1 / (n-len(S))) * (n*tau - len(S) * normalizedChebyPolyFixedPoint(0, len(tau)))
     
     if MM == "cheb":
