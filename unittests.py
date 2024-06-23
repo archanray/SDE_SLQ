@@ -449,7 +449,7 @@ class TestCalculations:
 
 if __name__ == '__main__':
     mults = [5] #[5,10,15,20,25]
-    dataset_names = "all" # "all"
+    dataset_names = "gaussian" # "all"
     methods = ["SLQMM", "CMM", "KPM", "VRSLQMM-c12", "BKSDE-CMM", "BKSDE-KPM"]# ["SLQMM", "CMM", "KPM", "VRSLQMM-c1", "VRSLQMM-c2", "VRSLQMM-c12"]
     loadresults = [True, True, True, True, False, False]
     for i in mults:

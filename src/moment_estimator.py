@@ -231,8 +231,8 @@ def bkde(A, k, bki_iters, seed=0, MM="cheb", cheb_vals=1000):
     q1_weights = (len(S) / n) * q1_weights
     q2_weights = ((n-len(S)) / n) * q2_weights
     
-    q_weights = np.concatenate(q1_weights, q2_weights)
-    q_supports = np.concatenate(q1_supports, q2_supports)
+    q_weights = np.hstack((q1_weights, q2_weights))
+    q_supports = np.hstack((q1_supports, q2_supports))
     
     q_supports, q_weights = aggregator(q_supports, q_weights)
     
