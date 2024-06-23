@@ -3,7 +3,7 @@ from src.lanczos import naive_lanczos
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import os
-from src.moment_estimator import approxChebMomentMatching, discretizedJacksonDampedKPM, hutchMomentEstimator, SLQMM, VRSLQMM, adder
+from src.moment_estimator import approxChebMomentMatching, discretizedJacksonDampedKPM, hutchMomentEstimator, SLQMM, VRSLQMM, adder, bkde
 from src.utils import Wasserstein, jacksonDampingCoefficients, jackson_poly_coeffs
 from src.distribution import Distribution, mergeDistributions
 from src.optimizers import cvxpyL1Solver
@@ -294,6 +294,10 @@ class TestCalculations:
             return VRSLQMM(data, degree, random_restarts, constraints="1")
         if method == "VRSLQMM-c2":
             return VRSLQMM(data, degree, random_restarts, constraints="2")
+        if method == "BKSDE-CMM":
+            return bkde(data, degree, random_restarts, MM="cheb", cheb_vals=cheb_vals)
+        if method == "BKSDE-KPM":
+            return bkde(data, degree, random_restarts, MM="KPM")
         return None
     
     def checkSDEApproxError(self, data, moments, support_true, method="CMM", cheb_vals=1000, trials=5, submethod="cvxpy", random_restarts=1):
@@ -338,7 +342,7 @@ class TestCalculations:
             ds = [dataset_names]
         # ds = ["erdos992"]
         if methods[-1] == "all":
-            methods = ["SLQMM", "CMM", "KPM", "VRSLQMM-c1", "VRSLQMM-c2", "VRSLQMM-c12"]
+            methods = ["SLQMM", "CMM", "KPM", "VRSLQMM-c1", "VRSLQMM-c2", "VRSLQMM-c12", "BKSDE-CMM", "BKSDE-KPM"]
         else:
             pass
         if len(loadresults) != len(methods):
@@ -445,7 +449,7 @@ class TestCalculations:
 if __name__ == '__main__':
     mults = [5] #[5,10,15,20,25]
     dataset_names = "all" # "all"
-    methods = ["SLQMM", "CMM", "KPM", "VRSLQMM-c12"]# ["SLQMM", "CMM", "KPM", "VRSLQMM-c1", "VRSLQMM-c2", "VRSLQMM-c12"]
-    loadresults = [True, True, True, True]
+    methods = ["SLQMM", "CMM", "KPM", "VRSLQMM-c12", "BKSDE-CMM", "BKSDE-KPM"]# ["SLQMM", "CMM", "KPM", "VRSLQMM-c1", "VRSLQMM-c2", "VRSLQMM-c12"]
+    loadresults = [True, True, True, True, True, False, False]
     for i in mults:
         TestCalculations().runSDEexperiments(i, dataset_names, methods, loadresults)

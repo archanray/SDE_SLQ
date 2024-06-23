@@ -174,7 +174,7 @@ def VRSLQMM(data, m, k, constraints="12"):
     # print("outside:", np.mean(LambdaStore, axis=0))
     return LambdaStore, WeightStore
 
-def bkde(A, k, l, seed=0):
+def bkde(A, k, l, seed=0, MM="cheb", cheb_vals=1000):
     """
     implements sde using block krylov deflation and SDE of BKM22
     """
@@ -183,35 +183,47 @@ def bkde(A, k, l, seed=0):
     iters = 10 # vary krylov iters here ############################################################
     r = 5 # set r accordingly ############################################################
     Q = bki(A, k, iters)
+    # matvecs here is free as K is already computed
     T = Q.T @ A @ Q
     Lambda, Vectors = np.linalg.eig(T)
     S = []
     for j in range(r):
         QV = Q @ Vectors[:,j]
+        # matvecs is free since K is constructed and columns of Q spans the columns of K
         if np.linalg.norm((A @ QV) - (Lambda[j]*QV), ord=2) <= (1/n**2):
             S.append(j)
     
     Z = Q @ Vectors[:, S]
     LsubS = Lambda[S]
     
+    # set up q_1
+    q1_supports = LsubS
+    q1_weights = np.ones_like(LsubS) / len(LsubS)
+    
     # filter the Zs and lambdas here
     P = np.eye(n) - np.dot(Z, Z.T)
-    L = n
+    L = n # upper bound on PAP l2 norm, can do 1
     # approximate moments
-    fx = hutchMomentEstimator(np.dot(P, np.dot(A, P))/L, k, l)
-    fx = (n / (n-k)) * fx - (k / (n-k)) * normalizedChebyPolyFixedPoint(0, len(fx))
-    supports, gx = approxChebMomentMatching(fx)
+    # l is taken as an argument, so l matvecs
+    tau = hutchMomentEstimator(np.dot(P, np.dot(A, P))/L, k, l)
+    tau = (1 / (n-len(S))) * (n*tau - len(S) * normalizedChebyPolyFixedPoint(0, len(tau)))
     
-    # assuming gx is a distribution
-    new_supports = []
-    new_ps = []
-    for i in range(len(supports)):
-        key = supports[i]
-        if -1 <= key <= 1:
-            new_supports.append(key*L)
-            new_ps.append(gx[i])
-    D2 = Distribution(np.array(new_supports), np.array(new_ps))
+    if MM == "cheb":
+        supports, gx = approxChebMomentMatching(tau, cheb_vals=cheb_vals)
+    else:
+        supports, gx = discretizedJacksonDampedKPM(tau)
     
-    D1 = Distribution(Lambda, np.ones_like(Lambda)/k)
-    outputDistro = mergeDistributions(D1, D2, aggregator(k, n))
-    return outputDistro
+    # filtering
+    mask = (np.abs(supports) < L).astype(int)
+    q2_supports = supports * mask
+    q2_weights = gx * mask
+    
+    q1_weights = (len(S) / n) * q1_weights
+    q2_weights = ((n-len(S)) / n) * q2_weights
+    
+    q_weights = np.concatenate(q1_weights, q2_weights)
+    q_supports = np.concatenate(q1_supports, q2_supports)
+    
+    q_supports, q_weights = aggregator(q_supports, q_weights)
+    
+    return q_supports, q_weights
