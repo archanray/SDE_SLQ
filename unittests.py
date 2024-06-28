@@ -18,6 +18,7 @@ import numpy.polynomial as poly
 import sys
 import seaborn as sns
 import pickle
+from src.block_krylov import bki
 
 def findMaxIndex(L1):
     if np.abs(L1[-1]) > np.abs(L1[0]):
@@ -437,11 +438,41 @@ class TestCalculations:
         plt.savefig("figures/unittests/CMM_variations_with_optimizer_"+dataset+".pdf", bbox_inches='tight', dpi=200)
             
         return None
+    
+    def checkKrlovCorrectness(self):
+        dataset = "power_law_spectrum"
+        data, n = get_data(dataset)
+        k = 5
+        block_size = np.arange(8,120,8)
+        trials = 5
+        check_ranks = [0,1,2,-1,-2,-3]
+        errors = np.zeros((trials, len(block_size)))
+        for check_rank in check_ranks:
+            print(check_rank)
+            for t in tqdm(range(trials)):
+                for i in range(len(block_size)):
+                    Q = bki(data, block_size[i], k)
+                    T = Q.T @ data @ Q
+                    Lambdas, Vectors = np.linalg.eig(T)
+                    Qv = Q @ Vectors[:,check_rank]
+                    errors[t, i] = np.linalg.norm(data @ Qv - Lambdas[check_rank]*Qv)
+                    pass
+            plt.plot(block_size, np.mean(errors, axis=0))
+            plt.fill_between(block_size, np.percentile(errors, axis=0, q=20), np.percentile(errors, axis=0, q=80), alpha=0.2)
+            plt.xlabel("Krylov block size")
+            plt.ylabel(r"$\|\mathbf{A} \mathbf{Q} \mathbf{v}_j-  \lambda_j(\mathbf{T}) \mathbf{Q}\mathbf{v}_j\|_2$")
+            plt.yscale("log")
+            plt.title("Eigenvector/value index: "+ str(check_rank))
+            plt.savefig("figures/unittests/block_krylov/test_error_"+str(check_rank)+".pdf", bbox_inches='tight', dpi=200)
+            plt.clf()
+            plt.close()
+        return None
 
 if __name__ == '__main__':
-    mults = [25] #[5,10,15,20,25]
-    dataset_names = "power_law_spectrum" # "all"
-    methods = ["SLQMM", "CMM", "KPM", "VRSLQMM-c12", "BKSDE-CMM", "BKSDE-KPM"]# ["SLQMM", "CMM", "KPM", "VRSLQMM-c1", "VRSLQMM-c2", "VRSLQMM-c12"]
-    loadresults = [True, True, True, True, False, False]
-    for i in mults:
-        TestCalculations().runSDEexperiments(i, dataset_names, methods, loadresults)
+    # mults = [25] #[5,10,15,20,25]
+    # dataset_names = "power_law_spectrum" # "all"
+    # methods = ["SLQMM", "CMM", "KPM", "VRSLQMM-c12", "BKSDE-CMM", "BKSDE-KPM"]# ["SLQMM", "CMM", "KPM", "VRSLQMM-c1", "VRSLQMM-c2", "VRSLQMM-c12"]
+    # loadresults = [True, True, True, True, False, False]
+    # for i in mults:
+    #     TestCalculations().runSDEexperiments(i, dataset_names, methods, loadresults)
+    TestCalculations().checkKrlovCorrectness()
