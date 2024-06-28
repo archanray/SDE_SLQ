@@ -363,13 +363,14 @@ class TestCalculations:
                 support_true = np.real(np.linalg.eigvals(data))
                 np.save(eigs_file, support_true)
             # set up moments
-            moments = np.arange(4,60,4, dtype=int)
+            moments = np.arange(8,120,8, dtype=int)
             
             foldername = "outputs/"+dataset+"/"+str(random_restarts)
             if not os.path.isdir(foldername):
                 os.makedirs(foldername)
             
             for i in range(len(methods)):
+                print(methods[i])
                 # set up file name
                 filename = foldername+"/"+methods[i]+".pkl"
                 # check if file with results exist, if yes load, else run code
@@ -387,14 +388,9 @@ class TestCalculations:
                 # plt.plot(random_restarts*moments, errors_mean, label=methods[i], color=colors[i])
                 # plt.fill_between(random_restarts*moments, errors_lo, errors_hi, alpha=0.2, color=colors[i])
                 
-                if "BKSDE" not in methods[i]:
-                    plt.plot(random_restarts*moments, errors_mean, label=methods[i], color=colors[i])
-                    plt.fill_between(random_restarts*moments, errors_lo, errors_hi, alpha=0.2, color=colors[i])
-                else:
-                    matvecs = np.array(random_restarts*moments) + 100*n//4 # n//4 is the matvecs used in hutch
-                    plt.plot(matvecs, errors_mean, label=methods[i], color=colors[i])
-                    plt.fill_between(matvecs, errors_lo, errors_hi, alpha=0.2, color=colors[i])
-            
+                plt.plot(random_restarts*moments, errors_mean, label=methods[i], color=colors[i])
+                plt.fill_between(random_restarts*moments, errors_lo, errors_hi, alpha=0.2, color=colors[i])
+                
             plt.legend()
             plt.ylabel("Wasserstein error")
             plt.yscale("log")
@@ -448,9 +444,9 @@ class TestCalculations:
         return None
 
 if __name__ == '__main__':
-    mults = [5] #[5,10,15,20,25]
+    mults = [25] #[5,10,15,20,25]
     dataset_names = "gaussian" # "all"
     methods = ["SLQMM", "CMM", "KPM", "VRSLQMM-c12", "BKSDE-CMM", "BKSDE-KPM"]# ["SLQMM", "CMM", "KPM", "VRSLQMM-c1", "VRSLQMM-c2", "VRSLQMM-c12"]
-    loadresults = [True, True, True, True, False, False]
+    loadresults = [False, False, False, False, False, False]
     for i in mults:
         TestCalculations().runSDEexperiments(i, dataset_names, methods, loadresults)

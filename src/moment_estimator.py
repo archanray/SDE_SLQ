@@ -22,7 +22,7 @@ def hutchMomentEstimator(A, N, l=1000, G=None):
     implements algorithm 2 of https://arxiv.org/pdf/2104.03461.pdf
     """
     np.testing.assert_allclose(A, A.T)
-    assert (N % 4 == 0)
+    # assert (N % 4 == 0)
     n = len(A)
     if G is None:
         # G = 2*np.random.binomial(1, 0.5, size=(n, l)) - 1.0
@@ -185,10 +185,10 @@ def bkde(A, k, bki_iters, seed=0, MM="cheb", cheb_vals=1000):
     n = len(A)
     
     # parameters
-    r = k # since Q will be of size n x k
+    r = k//2 # since Q will be of size n x k
     
     # get Q from block krylov
-    Q = bki(A, k, bki_iters) # matvecs= iters x k
+    Q = bki(A, k//2, bki_iters) # matvecs= iters x k
     # matvecs here is free since K is already computed
     T = Q.T @ A @ Q
     Lambda, Vectors = np.linalg.eig(T)
@@ -213,8 +213,8 @@ def bkde(A, k, bki_iters, seed=0, MM="cheb", cheb_vals=1000):
     
     # approximate moments
     # ell can be very small, so ell*k matvecs
-    ell = int(n/4)
-    N_hutch = 100
+    ell = 5
+    N_hutch = k//2
     tau = hutchMomentEstimator((P.T @ A @ P)/L, N_hutch, ell)
     tau = (1 / (n-len(S))) * (n*tau - len(S) * normalizedChebyPolyFixedPoint(0, len(tau)))
     
