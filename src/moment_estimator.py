@@ -174,12 +174,12 @@ def VRSLQMM(data, m, k, constraints="12"):
     # print("outside:", np.mean(LambdaStore, axis=0))
     return LambdaStore, WeightStore
 
-def bkde(A, k, bki_iters, seed=0, MM="cheb", cheb_vals=1000):
+def bkde(A, k, iters, seed=0, MM="cheb", cheb_vals=1000):
     """
     implements sde using block krylov deflation and SDE of BKM22
     A: data
     k: block-size in krylov
-    bki_iters: block krylov iters
+    iters: block krylov iters & hutch random vecs
     """
     np.random.seed(seed)
     n = len(A)
@@ -188,15 +188,18 @@ def bkde(A, k, bki_iters, seed=0, MM="cheb", cheb_vals=1000):
     r = k//2 # since Q will be of size n x k
     
     # get Q from block krylov
-    Q = bki(A, k//2, bki_iters) # matvecs= iters x k
+    Q = bki(A, k//2, iters) # matvecs= iters x k
+    print(Q.shape, k//2)
     # matvecs here is free since K is already computed
     T = Q.T @ A @ Q
     Lambda, Vectors = np.linalg.eig(T)
     S = []
+    multiplier = 1
+    power = 2
     for j in range(r):
         QV = Q @ Vectors[:,j]
         # matvecs is free since K is constructed and columns of Q spans the columns of K
-        if np.linalg.norm((A @ QV) - (Lambda[j]*QV), ord=2) <= (1/n**2):
+        if np.linalg.norm((A @ QV) - (Lambda[j]*QV), ord=2) <= (multiplier / n**power):
             S.append(j)
     
     # store converged Q and lambdas
@@ -213,7 +216,7 @@ def bkde(A, k, bki_iters, seed=0, MM="cheb", cheb_vals=1000):
     
     # approximate moments
     # ell can be very small, so ell*k matvecs
-    ell = 5
+    ell = iters
     N_hutch = k//2
     tau = hutchMomentEstimator((P.T @ A @ P)/L, N_hutch, ell)
     tau = (1 / (n-len(S))) * (n*tau - len(S) * normalizedChebyPolyFixedPoint(0, len(tau)))

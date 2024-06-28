@@ -335,19 +335,17 @@ class TestCalculations:
     def runSDEexperiments(self, random_restarts=5, dataset_names = "all", methods = ["all"], loadresults = [True, True, True, True, True, True]):
         # colors chosen from https://matplotlib.org/stable/gallery/color/named_colors.html
         colors = ["red", "dodgerblue", "black", "darkorchid", "darkgoldenrod", "green"]
-        
         if dataset_names == "all":
-            ds = ["gaussian", "uniform", "erdos992", "small_large_diagonal", "low_rank_matrix", "power_law_spectrum", "hypercube", "inverse_spectrum", "square_inverse_spectrum"]
+            ds = ["gaussian", "uniform", "erdos992", "small_large_diagonal", "low_rank_matrix", "power_law_spectrum", "inverse_spectrum", "square_inverse_spectrum"] # "hypercube"
         else:
             ds = [dataset_names]
-        # ds = ["erdos992"]
         if methods[-1] == "all":
             methods = ["SLQMM", "CMM", "KPM", "VRSLQMM-c1", "VRSLQMM-c2", "VRSLQMM-c12", "BKSDE-CMM", "BKSDE-KPM"]
         else:
             pass
         if len(loadresults) != len(methods):
             print("loadresults should be of same size")
-            sys.exit(1)
+            sys.exit(1)        
         for dataset in ds:
             print("running for dataset:", dataset)
             print("random restarts:", random_restarts)
@@ -384,10 +382,7 @@ class TestCalculations:
                     file_ = open(filename, "wb")
                     pickle.dump([errors_mean, errors_lo, errors_hi], file_)
                     file_.close()
-                
-                # plt.plot(random_restarts*moments, errors_mean, label=methods[i], color=colors[i])
-                # plt.fill_between(random_restarts*moments, errors_lo, errors_hi, alpha=0.2, color=colors[i])
-                
+                    
                 plt.plot(random_restarts*moments, errors_mean, label=methods[i], color=colors[i])
                 plt.fill_between(random_restarts*moments, errors_lo, errors_hi, alpha=0.2, color=colors[i])
                 
@@ -445,8 +440,8 @@ class TestCalculations:
 
 if __name__ == '__main__':
     mults = [25] #[5,10,15,20,25]
-    dataset_names = "gaussian" # "all"
+    dataset_names = "power_law_spectrum" # "all"
     methods = ["SLQMM", "CMM", "KPM", "VRSLQMM-c12", "BKSDE-CMM", "BKSDE-KPM"]# ["SLQMM", "CMM", "KPM", "VRSLQMM-c1", "VRSLQMM-c2", "VRSLQMM-c12"]
-    loadresults = [False, False, False, False, False, False]
+    loadresults = [True, True, True, True, False, False]
     for i in mults:
         TestCalculations().runSDEexperiments(i, dataset_names, methods, loadresults)
