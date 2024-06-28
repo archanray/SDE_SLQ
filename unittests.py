@@ -462,7 +462,7 @@ class TestCalculations:
             plt.xlabel("Krylov block size")
             plt.ylabel(r"$\|\mathbf{A} \mathbf{Q} \mathbf{v}_j-  \lambda_j(\mathbf{T}) \mathbf{Q}\mathbf{v}_j\|_2$")
             plt.yscale("log")
-            plt.title("Eigenvector/value index: "+ str(check_rank))
+            plt.title("Eigenvector index/value: "+ str(check_rank) + "/"+str(Lambdas[check_rank]))
             plt.savefig("figures/unittests/block_krylov/test_error_"+str(check_rank)+".pdf", bbox_inches='tight', dpi=200)
             plt.clf()
             plt.close()
