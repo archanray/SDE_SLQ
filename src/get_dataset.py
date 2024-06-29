@@ -17,14 +17,14 @@ def normalize_adj_sym(adj_mat):
     adj_mat = adj_mat*(1./np.sqrt(degs))	
     return np.nan_to_num(adj_mat)
 
-def get_data(name, seed=1):
+def get_data(name, seed=1, load=True):
     # set seed for repeatale experiments
     np.random.seed(seed)
     # set up file path
     file_path = os.path.join("matrices", name+".npy")
     
     # if file exists just load it, else generate or copy from data
-    if os.path.exists(file_path):
+    if os.path.exists(file_path) and load==True:
         with open(file_path, "rb") as f:
             dataset = np.load(f)
         dataset_size = len(dataset)

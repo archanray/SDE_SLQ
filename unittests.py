@@ -335,7 +335,7 @@ class TestCalculations:
     
     def runSDEexperiments(self, random_restarts=5, dataset_names = "all", methods = ["all"], loadresults = [True, True, True, True, True, True]):
         # colors chosen from https://matplotlib.org/stable/gallery/color/named_colors.html
-        colors = ["red", "dodgerblue", "black", "darkorchid", "darkgoldenrod", "green"]
+        colors = ["red", "dodgerblue", "black", "darkorchid", "#D2691E", "#40E0D0"]
         if dataset_names == "all":
             ds = ["gaussian", "uniform", "erdos992", "small_large_diagonal", "low_rank_matrix", "power_law_spectrum", "inverse_spectrum", "square_inverse_spectrum"] # "hypercube"
         else:
@@ -469,10 +469,10 @@ class TestCalculations:
         return None
 
 if __name__ == '__main__':
-    # mults = [25] #[5,10,15,20,25]
-    # dataset_names = "power_law_spectrum" # "all"
-    # methods = ["SLQMM", "CMM", "KPM", "VRSLQMM-c12", "BKSDE-CMM", "BKSDE-KPM"]# ["SLQMM", "CMM", "KPM", "VRSLQMM-c1", "VRSLQMM-c2", "VRSLQMM-c12"]
-    # loadresults = [True, True, True, True, False, False]
-    # for i in mults:
-    #     TestCalculations().runSDEexperiments(i, dataset_names, methods, loadresults)
-    TestCalculations().checkKrlovCorrectness()
+    mults = [25] #[5,10,15,20,25]
+    dataset_names = "uniform" # "all"
+    methods = ["SLQMM", "CMM", "KPM", "VRSLQMM-c12", "BKSDE-CMM", "BKSDE-KPM"]# ["SLQMM", "CMM", "KPM", "VRSLQMM-c1", "VRSLQMM-c2", "VRSLQMM-c12"]
+    loadresults = [True, True, False, True, True, True]
+    for i in mults:
+        TestCalculations().runSDEexperiments(i, dataset_names, methods, loadresults)
+    # TestCalculations().checkKrlovCorrectness()

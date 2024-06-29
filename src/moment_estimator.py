@@ -27,6 +27,8 @@ def hutchMomentEstimator(A, N, l=1000, G=None):
     if G is None:
         # G = 2*np.random.binomial(1, 0.5, size=(n, l)) - 1.0
         G = np.random.normal(loc=0.,scale=1., size=(n, l))
+    else:
+        n, l = G.shape
     tau = np.zeros(N+1)
     Tkm2 = deepcopy(G)
     Tkm1 = np.dot(A, G)
@@ -83,7 +85,8 @@ def discretizedJacksonDampedKPM(tau):
     tau = np.insert(tau, 0, 1/np.sqrt(np.pi))
     b = jacksonDampingCoefficients(N)
     b = b / b[0]
-    d = 10000 # set this for discretization
+    # set the following for discretization
+    d = 10000 
     xs = -1.0 + (2*np.array(list(range(1,d+1)), dtype=tau.dtype) / d)
     # remove any 1s and -1s for stability issues of w
     xs = xs[np.where(abs(xs) != 1)]
@@ -97,11 +100,13 @@ def discretizedJacksonDampedKPM(tau):
     ws = np.ones(len(xs)) / np.sqrt(1 - xs**2)
     # q = (stilde + (w*sqrt(2)/(N*sqrt(pi)))) / (1+ sqrt(2pi)/N)
     q = (ws * coeffs + (ws*np.sqrt(2)/(N*np.sqrt(np.pi)))) / (1 + (np.sqrt(2*np.pi) / N))
+    # q[q<0] = 0
     return xs, q
 
-def SLQMM(data, nv, k):
+def SLQMM(data, nv, k, V = None):
     n = len(data)
-    V = np.random.randn(n,k)
+    if V is None:
+        V = np.random.randn(n,k)
     V /= np.linalg.norm(V, axis=0)
     LambdaStore = np.zeros((k, nv))
     WeightStore = np.zeros_like(LambdaStore)
@@ -121,12 +126,13 @@ def SLQMM(data, nv, k):
     # print("outside:", np.mean(LambdaStore, axis=0))
     return LambdaStore, WeightStore
 
-def VRSLQMM(data, m, k, constraints="12"):
+def VRSLQMM(data, m, k, constraints="12", V=None):
     # assumption:
     # 1. l = nv/4
     l = int(m/10)
     n = len(data)
-    V = np.random.randn(n,k)
+    if V is None:
+        V = np.random.randn(n,k)
     V /= np.linalg.norm(V, axis=0)
     LambdaStore = []
     WeightStore = []
@@ -174,7 +180,7 @@ def VRSLQMM(data, m, k, constraints="12"):
     # print("outside:", np.mean(LambdaStore, axis=0))
     return LambdaStore, WeightStore
 
-def bkde(A, k, iters, seed=0, MM="cheb", cheb_vals=1000):
+def bkde(A, k, iters, seed=0, MM="cheb", cheb_vals=1000, G = None):
     """
     implements sde using block krylov deflation and SDE of BKM22
     A: data
@@ -185,21 +191,20 @@ def bkde(A, k, iters, seed=0, MM="cheb", cheb_vals=1000):
     n = len(A)
     
     # parameters
-    r = k//2 # since Q will be of size n x k
+    r = k//4 # since Q will be of size n x k
     
     # get Q from block krylov
-    Q = bki(A, k//2, iters) # matvecs= iters x k
-    print(Q.shape, k//2)
+    Q = bki(A, r, iters) # matvecs= iters x k
+    # print(Q.shape, k//2)
     # matvecs here is free since K is already computed
     T = Q.T @ A @ Q
     Lambda, Vectors = np.linalg.eig(T)
     S = []
-    multiplier = 1
-    power = 2
+    constraint = 1e-6
     for j in range(r):
         QV = Q @ Vectors[:,j]
         # matvecs is free since K is constructed and columns of Q spans the columns of K
-        if np.linalg.norm((A @ QV) - (Lambda[j]*QV), ord=2) <= (multiplier / n**power):
+        if np.linalg.norm((A @ QV) - (Lambda[j]*QV), ord=2) <= constraint:
             S.append(j)
     
     # store converged Q and lambdas
@@ -217,8 +222,8 @@ def bkde(A, k, iters, seed=0, MM="cheb", cheb_vals=1000):
     # approximate moments
     # ell can be very small, so ell*k matvecs
     ell = iters
-    N_hutch = k//2
-    tau = hutchMomentEstimator((P.T @ A @ P)/L, N_hutch, ell)
+    N_hutch = 3*k//2
+    tau = hutchMomentEstimator((P.T @ A @ P)/L, N_hutch, ell, G=G)
     tau = (1 / (n-len(S))) * (n*tau - len(S) * normalizedChebyPolyFixedPoint(0, len(tau)))
     
     if MM == "cheb":
