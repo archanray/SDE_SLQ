@@ -10,7 +10,7 @@ def main(random_restarts=5, dataset_names = "all", methods = ["all"], loadresult
     # colors chosen from https://matplotlib.org/stable/gallery/color/named_colors.html
     colors = ["red", "dodgerblue", "black", "darkorchid", "#D2691E", "#40E0D0"]
     if dataset_names == "all":
-        ds = ["gaussian", "uniform", "erdos992", "small_large_diagonal", "low_rank_matrix", "power_law_spectrum", "inverse_spectrum", "square_inverse_spectrum"] # "hypercube"
+        ds = ["gaussian", "uniform", "erdos992", "small_large_diagonal", "low_rank_matrix", "power_law_spectrum", "inverse_spectrum", "square_inverse_spectrum"] # "hypercube", "gaussian", "uniform"
     else:
         ds = [dataset_names]
     if methods[-1] == "all":
@@ -97,7 +97,7 @@ def main(random_restarts=5, dataset_names = "all", methods = ["all"], loadresult
 
 if __name__ == "__main__":
     mults = 25
-    dataset_names = "erdos992"
+    dataset_names = "all"
     methods = ["SLQMM", "CMM", "KPM", "VRSLQMM-c12", "BKSDE-CMM", "BKSDE-KPM"]# ["SLQMM", "CMM", "KPM", "VRSLQMM-c1", "VRSLQMM-c2", "VRSLQMM-c12"]
     loadresults = [False, False, False, False, False, False]
     main(mults, dataset_names, methods, loadresults)

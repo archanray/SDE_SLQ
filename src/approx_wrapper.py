@@ -40,7 +40,8 @@ def checkSDEApproxError(data, moments, support_true, method="CMM", cheb_vals=100
         # generate random vectors
         n = len(data)
         l = random_restarts
-        rand_vects = np.random.normal(loc=0.,scale=1., size=(n, l))
+        # rand_vects = np.random.normal(loc=0.,scale=1., size=(n, l))
+        rand_vects = None
         for j in range(len(moments)):
             support_current, pdf_current = sdeComputer(data, moments[j], method = method, cheb_vals = cheb_vals, submethod=submethod, eigvals=eigvals, random_restarts=random_restarts, rand_vects=rand_vects)
             # if j == len(moments)-1:
