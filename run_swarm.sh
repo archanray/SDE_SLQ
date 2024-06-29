@@ -4,7 +4,7 @@
 #SBATCH -p longq
 #SBATCH --mem 32000
 #SBATCH -t 07-00:00:00  # Job time limit
-#SBATCH -o unittests.out
-#SBATCH -e unittests.err
+#SBATCH -o main.out
+#SBATCH -e main.err
 
-python unittests.py
+python main.py
