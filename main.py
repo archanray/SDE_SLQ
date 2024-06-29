@@ -24,7 +24,7 @@ def main(random_restarts=5, dataset_names = "all", methods = ["all"], loadresult
         print("running for dataset:", dataset)
         print("random restarts:", random_restarts)
         # dataset = "hypercube"
-        load_mat_flag = False
+        load_mat_flag = True
         data, n = get_data(dataset, load=load_mat_flag)
         data /= np.linalg.norm(data, ord=2)
         eigs_folder = "outputs/"+dataset+"/"
@@ -97,7 +97,7 @@ def main(random_restarts=5, dataset_names = "all", methods = ["all"], loadresult
 
 if __name__ == "__main__":
     mults = 25
-    dataset_names = "all"
+    dataset_names = "erdos992"
     methods = ["SLQMM", "CMM", "KPM", "VRSLQMM-c12", "BKSDE-CMM", "BKSDE-KPM"]# ["SLQMM", "CMM", "KPM", "VRSLQMM-c1", "VRSLQMM-c2", "VRSLQMM-c12"]
     loadresults = [False, False, False, False, False, False]
     main(mults, dataset_names, methods, loadresults)
