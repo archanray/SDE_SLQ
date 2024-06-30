@@ -10,7 +10,7 @@ def main(random_restarts=5, dataset_names = "all", methods = ["all"], loadresult
     # colors chosen from https://matplotlib.org/stable/gallery/color/named_colors.html
     colors = ["red", "dodgerblue", "black", "darkorchid", "#D2691E", "#40E0D0"]
     if dataset_names == "all":
-        ds = ["gaussian", "uniform", "erdos992", "small_large_diagonal", "low_rank_matrix", "power_law_spectrum", "inverse_spectrum", "square_inverse_spectrum"] # "hypercube", "gaussian", "uniform"
+        ds = ["erdos992", "small_large_diagonal", "low_rank_matrix", "power_law_spectrum", "inverse_spectrum", "square_inverse_spectrum"] # "hypercube", "gaussian", "uniform"
     else:
         ds = [dataset_names]
     if methods[-1] == "all":
@@ -26,7 +26,7 @@ def main(random_restarts=5, dataset_names = "all", methods = ["all"], loadresult
         # dataset = "hypercube"
         load_mat_flag = True
         data, n = get_data(dataset, load=load_mat_flag)
-        data /= np.linalg.norm(data, ord=2)
+        print(np.linalg.norm(data, ord=2))
         eigs_folder = "outputs/"+dataset+"/"
         if not os.path.isdir(eigs_folder):
             os.makedirs(eigs_folder)

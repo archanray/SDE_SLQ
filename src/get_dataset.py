@@ -17,9 +17,9 @@ def normalize_adj_sym(adj_mat):
     adj_mat = adj_mat*(1./np.sqrt(degs))	
     return np.nan_to_num(adj_mat)
 
-def get_data(name, seed=1, load=True):
+def get_data(name, load=True):
     # set seed for repeatale experiments
-    np.random.seed(seed)
+    # np.random.seed(seed)
     # set up file path
     file_path = os.path.join("matrices", name+".npy")
     
@@ -28,6 +28,7 @@ def get_data(name, seed=1, load=True):
         with open(file_path, "rb") as f:
             dataset = np.load(f)
         dataset_size = len(dataset)
+        dataset /= np.linalg.norm(dataset)
     else:
         if name == "random":
             """
