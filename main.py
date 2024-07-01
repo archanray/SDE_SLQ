@@ -10,7 +10,7 @@ def main(random_restarts=5, dataset_names = "all", methods = ["all"], loadresult
     # colors chosen from https://matplotlib.org/stable/gallery/color/named_colors.html
     colors = ["red", "dodgerblue", "black", "darkorchid", "#D2691E", "#40E0D0"]
     if dataset_names == "all":
-        ds = ["erdos992", "small_large_diagonal", "low_rank_matrix", "power_law_spectrum", "inverse_spectrum", "square_inverse_spectrum"] # "hypercube", "gaussian", "uniform"
+        ds = ["gaussian", "uniform", "erdos992", "small_large_diagonal", "low_rank_matrix", "power_law_spectrum", "inverse_spectrum", "square_inverse_spectrum"] # "hypercube", "gaussian", "uniform"
     else:
         ds = [dataset_names]
     if methods[-1] == "all":
@@ -24,7 +24,7 @@ def main(random_restarts=5, dataset_names = "all", methods = ["all"], loadresult
         print("running for dataset:", dataset)
         print("random restarts:", random_restarts)
         # dataset = "hypercube"
-        load_mat_flag = True
+        load_mat_flag = False
         data, n = get_data(dataset, load=load_mat_flag)
         print(np.linalg.norm(data, ord=2))
         eigs_folder = "outputs/"+dataset+"/"
@@ -59,7 +59,7 @@ def main(random_restarts=5, dataset_names = "all", methods = ["all"], loadresult
                 errors_mean, errors_lo, errors_hi = pickle.load(file_)
                 file_.close()
             else:
-                errors_mean, errors_lo, errors_hi = checkSDEApproxError(data, moments, support_true, method=methods[i], cheb_vals=5000, random_restarts=random_restarts)
+                errors_mean, errors_lo, errors_hi = checkSDEApproxError(data, moments, support_true, method=methods[i], cheb_vals=5000, random_restarts=random_restarts,)
                 # save results to filename
                 file_ = open(filename, "wb")
                 pickle.dump([errors_mean, errors_lo, errors_hi], file_)
@@ -96,8 +96,10 @@ def main(random_restarts=5, dataset_names = "all", methods = ["all"], loadresult
     return None
 
 if __name__ == "__main__":
-    mults = 25
+    mults = [5,15,25]
     dataset_names = "all"
     methods = ["SLQMM", "CMM", "KPM", "VRSLQMM-c12", "BKSDE-CMM", "BKSDE-KPM"]# ["SLQMM", "CMM", "KPM", "VRSLQMM-c1", "VRSLQMM-c2", "VRSLQMM-c12"]
     loadresults = [False, False, False, False, False, False]
-    main(mults, dataset_names, methods, loadresults)
+    for mult in mults:
+        print("###################### random restarts:", mult)
+        main(mult, dataset_names, methods, loadresults)

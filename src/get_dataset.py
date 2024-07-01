@@ -28,7 +28,7 @@ def get_data(name, load=True):
         with open(file_path, "rb") as f:
             dataset = np.load(f)
         dataset_size = len(dataset)
-        dataset /= np.linalg.norm(dataset)
+        dataset /= np.linalg.norm(dataset, ord=2)
     else:
         if name == "random":
             """
