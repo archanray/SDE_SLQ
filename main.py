@@ -10,7 +10,7 @@ def main(random_restarts=5, dataset_names = "all", methods = ["all"], loadresult
     # colors chosen from https://matplotlib.org/stable/gallery/color/named_colors.html
     colors = ["red", "dodgerblue", "black", "darkorchid", "#D2691E", "#40E0D0"]
     if dataset_names == "all":
-        ds = ["gaussian", "uniform", "erdos992", "small_large_diagonal", "low_rank_matrix", "power_law_spectrum", "inverse_spectrum", "square_inverse_spectrum"] # "hypercube", "gaussian", "uniform"
+        ds = ["small_large_diagonal", "low_rank_matrix", "power_law_spectrum", "inverse_spectrum", "square_inverse_spectrum"] # "hypercube", "gaussian", "uniform", "erdos992"
     else:
         ds = [dataset_names]
     if methods[-1] == "all":
