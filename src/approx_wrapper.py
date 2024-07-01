@@ -27,7 +27,7 @@ def sdeComputer(data, degree, method = "CMM", cheb_vals=None, submethod="cvxpy",
         return bkde(data, degree, random_restarts, MM="KPM")
     return None
 
-def checkSDEApproxError(data, moments, support_true, method="CMM", cheb_vals=1000, trials=5, submethod="cvxpy", random_restarts=1, q_lo=20, q_hi=80):
+def checkSDEApproxError(data, moments, support_true, method="CMM", cheb_vals=1000, trials=5, submethod="cvxpy", random_restarts=1, q_lo=20, q_hi=80, variation="fixed"):
     quantile_lo = q_lo
     quantile_hi = q_hi
     errors = np.zeros((trials,len(moments)))
@@ -40,8 +40,10 @@ def checkSDEApproxError(data, moments, support_true, method="CMM", cheb_vals=100
         # generate random vectors
         n = len(data)
         l = random_restarts
-        # rand_vects = np.random.normal(loc=0.,scale=1., size=(n, l)) #####################CHANGE THIS IN THE MORNING TO RUN ANOTHER
-        rand_vects = None
+        if variation == "fixed":
+            rand_vects = np.random.normal(loc=0.,scale=1., size=(n, l)) #####################CHANGE THIS IN THE MORNING TO RUN ANOTHER
+        else:
+            rand_vects = None
         for j in range(len(moments)):
             support_current, pdf_current = sdeComputer(data, moments[j], method = method, cheb_vals = cheb_vals, submethod=submethod, eigvals=eigvals, random_restarts=random_restarts, rand_vects=rand_vects)
             # if j == len(moments)-1:

@@ -6,11 +6,11 @@ from src.utils import get_spectrum, saver
 from src.approx_wrapper import checkSDEApproxError
 import matplotlib.pyplot as plt
 
-def main(random_restarts=5, dataset_names = "all", methods = ["all"], loadresults = [True, True, True, True, True, True]):
+def main(random_restarts=5, dataset_names = "all", methods = ["all"], loadresults = [True, True, True, True, True, True], variation="fixed"):
     # colors chosen from https://matplotlib.org/stable/gallery/color/named_colors.html
     colors = ["red", "dodgerblue", "black", "darkorchid", "#D2691E", "#40E0D0"]
     if dataset_names == "all":
-        ds = ["small_large_diagonal", "low_rank_matrix", "power_law_spectrum", "inverse_spectrum", "square_inverse_spectrum"] # "hypercube", "gaussian", "uniform", "erdos992"
+        ds = ["gaussian", "uniform", "small_large_diagonal", "low_rank_matrix", "power_law_spectrum", "inverse_spectrum", "square_inverse_spectrum"] # "hypercube", "gaussian", "uniform", "erdos992"
     else:
         ds = [dataset_names]
     if methods[-1] == "all":
@@ -27,7 +27,7 @@ def main(random_restarts=5, dataset_names = "all", methods = ["all"], loadresult
         load_mat_flag = False
         data, n = get_data(dataset, load=load_mat_flag)
         print(np.linalg.norm(data, ord=2))
-        eigs_folder = "outputs/"+dataset+"/"+"_random/"
+        eigs_folder = "outputs/"+dataset+"/"+"_"+variation+"/"
         if not os.path.isdir(eigs_folder):
             os.makedirs(eigs_folder)
         eigs_file = eigs_folder+"true_eigvals.npy"
@@ -39,7 +39,7 @@ def main(random_restarts=5, dataset_names = "all", methods = ["all"], loadresult
         # set up moments
         moments = np.arange(8,120,8, dtype=int)
         
-        foldername = "outputs/"+dataset+"/"+str(random_restarts)+"_random"
+        foldername = "outputs/"+dataset+"/"+str(random_restarts)+"_"+variation+"/"
         if not os.path.isdir(foldername):
             os.makedirs(foldername)
         
@@ -79,9 +79,9 @@ def main(random_restarts=5, dataset_names = "all", methods = ["all"], loadresult
         plt.xlabel("Total matric-vector queries")
         plt.yticks([10**0, 10**(-1), 10**(-2), 10**(-3)])
         plt.grid()
-        if not os.path.isdir("figures/unittests/SDE_approximation_errors/"+str(random_restarts)+"_random"):
-            os.makedirs("figures/unittests/SDE_approximation_errors/"+str(random_restarts)+"_random")
-        plt.savefig("figures/unittests/SDE_approximation_errors/"+str(random_restarts)+"_random"+"/"+dataset+".pdf", bbox_inches='tight', dpi=200)
+        if not os.path.isdir("figures/unittests/SDE_approximation_errors/"+str(random_restarts)+"_"+variation+"/"):
+            os.makedirs("figures/unittests/SDE_approximation_errors/"+str(random_restarts)+"_"+variation+"/")
+        plt.savefig("figures/unittests/SDE_approximation_errors/"+str(random_restarts)+"_"+variation+"/"+dataset+".pdf", bbox_inches='tight', dpi=200)
         # plt.clf()
         # plt.close()
         
@@ -96,10 +96,12 @@ def main(random_restarts=5, dataset_names = "all", methods = ["all"], loadresult
     return None
 
 if __name__ == "__main__":
-    mults = [5,15,25]
+    val = int(sys.argv[1])
+    var = sys.argv[2]
+    mults = [val]
     dataset_names = "all"
     methods = ["SLQMM", "CMM", "KPM", "VRSLQMM-c12", "BKSDE-CMM", "BKSDE-KPM"]# ["SLQMM", "CMM", "KPM", "VRSLQMM-c1", "VRSLQMM-c2", "VRSLQMM-c12"]
     loadresults = [False, False, False, False, False, False]
     for mult in mults:
         print("###################### random restarts:", mult)
-        main(mult, dataset_names, methods, loadresults)
+        main(mult, dataset_names, methods, loadresults, variation=var)
