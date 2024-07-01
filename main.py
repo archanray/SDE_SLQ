@@ -27,7 +27,7 @@ def main(random_restarts=5, dataset_names = "all", methods = ["all"], loadresult
         load_mat_flag = False
         data, n = get_data(dataset, load=load_mat_flag)
         print(np.linalg.norm(data, ord=2))
-        eigs_folder = "outputs/"+dataset+"/"
+        eigs_folder = "outputs/"+dataset+"/"+"_random/"
         if not os.path.isdir(eigs_folder):
             os.makedirs(eigs_folder)
         eigs_file = eigs_folder+"true_eigvals.npy"
@@ -39,7 +39,7 @@ def main(random_restarts=5, dataset_names = "all", methods = ["all"], loadresult
         # set up moments
         moments = np.arange(8,120,8, dtype=int)
         
-        foldername = "outputs/"+dataset+"/"+str(random_restarts)
+        foldername = "outputs/"+dataset+"/"+str(random_restarts)+"_random"
         if not os.path.isdir(foldername):
             os.makedirs(foldername)
         
@@ -79,9 +79,9 @@ def main(random_restarts=5, dataset_names = "all", methods = ["all"], loadresult
         plt.xlabel("Total matric-vector queries")
         plt.yticks([10**0, 10**(-1), 10**(-2), 10**(-3)])
         plt.grid()
-        if not os.path.isdir("figures/unittests/SDE_approximation_errors/"+str(random_restarts)+"_fixed"):
-            os.makedirs("figures/unittests/SDE_approximation_errors/"+str(random_restarts)+"_fixed")
-        plt.savefig("figures/unittests/SDE_approximation_errors/"+str(random_restarts)+"_fixed"+"/"+dataset+".pdf", bbox_inches='tight', dpi=200)
+        if not os.path.isdir("figures/unittests/SDE_approximation_errors/"+str(random_restarts)+"_random"):
+            os.makedirs("figures/unittests/SDE_approximation_errors/"+str(random_restarts)+"_random")
+        plt.savefig("figures/unittests/SDE_approximation_errors/"+str(random_restarts)+"_random"+"/"+dataset+".pdf", bbox_inches='tight', dpi=200)
         # plt.clf()
         # plt.close()
         
