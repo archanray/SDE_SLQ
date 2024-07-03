@@ -112,7 +112,7 @@ def get_data(name, load=True):
         
         if name == "small_large_diagonal" or name == "low_rank_matrix":
             n = 1000
-            p = 10
+            p = 100
             if name == "small_large_diagonal":
                 small_vals = np.sort(np.random.randn(n-p) / 1e+10)
             if name == "low_rank_matrix":
