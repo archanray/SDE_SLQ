@@ -101,7 +101,7 @@ if __name__ == "__main__":
     mults = [val]
     dataset_names = "low_rank_matrix"
     methods = ["SLQMM", "CMM", "KPM", "VRSLQMM-c12", "BKSDE-CMM", "BKSDE-KPM"]# ["SLQMM", "CMM", "KPM", "VRSLQMM-c1", "VRSLQMM-c2", "VRSLQMM-c12"]
-    loadresults = [True, True, True, True, False, False]
+    loadresults = [False, False, False, False, False, False]
     for mult in mults:
         print("###################### random restarts:", mult)
         main(mult, dataset_names, methods, loadresults, variation=var)
