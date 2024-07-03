@@ -59,7 +59,7 @@ def main(random_restarts=5, dataset_names = "all", methods = ["all"], loadresult
                 errors_mean, errors_lo, errors_hi = pickle.load(file_)
                 file_.close()
             else:
-                errors_mean, errors_lo, errors_hi = checkSDEApproxError(data, moments, support_true, method=methods[i], cheb_vals=5000, random_restarts=random_restarts,variation=variation)
+                errors_mean, errors_lo, errors_hi = checkSDEApproxError(data, moments, support_true, method=methods[i], cheb_vals=10000, random_restarts=random_restarts,variation=variation)
                 # save results to filename
                 file_ = open(filename, "wb")
                 pickle.dump([errors_mean, errors_lo, errors_hi], file_)

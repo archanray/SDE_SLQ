@@ -202,7 +202,7 @@ def bkde(A, k, iters, seed=0, MM="cheb", cheb_vals=1000, G = None):
     T = Q.T @ A @ Q
     Lambda, Vectors = np.linalg.eig(T)
     S = []
-    constraint = 1e-10
+    constraint = 1e-6
     convergence_vals = np.zeros(Q.shape[1])
     for j in range(r):
         QV = Q @ Vectors[:,j]
