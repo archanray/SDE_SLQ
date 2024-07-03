@@ -440,22 +440,25 @@ class TestCalculations:
         return None
     
     def checkKrlovCorrectness(self):
-        dataset = "power_law_spectrum"
+        dataset = "gaussian"
         data, n = get_data(dataset)
-        k = 5
-        block_size = np.arange(8,120,8)
+        print(np.linalg.norm(data, ord=2))
+        k = 15
+        block_size = np.arange(8,60,4) // 2
         trials = 5
-        check_ranks = [0,1,2,-1,-2,-3]
+        check_ranks = [0,1,2,3]
         errors = np.zeros((trials, len(block_size)))
         for check_rank in check_ranks:
             print(check_rank)
             for t in tqdm(range(trials)):
                 for i in range(len(block_size)):
                     Q = bki(data, block_size[i], k)
+                    print(k, Q.shape)
                     T = Q.T @ data @ Q
                     Lambdas, Vectors = np.linalg.eig(T)
                     Qv = Q @ Vectors[:,check_rank]
                     errors[t, i] = np.linalg.norm(data @ Qv - Lambdas[check_rank]*Qv)
+                    # print(errors[t,i])
                     pass
             plt.plot(block_size, np.mean(errors, axis=0))
             plt.fill_between(block_size, np.percentile(errors, axis=0, q=20), np.percentile(errors, axis=0, q=80), alpha=0.2)
@@ -467,12 +470,50 @@ class TestCalculations:
             plt.clf()
             plt.close()
         return None
+    
+    def check_deflation(self):
+        dataset = "low_rank_matrix"
+        data, n = get_data(dataset)
+        
+        E, L = np.linalg.eig(data)
+        print(E)
+        
+        Z = L[:,0:2]
+        Ed = E[2:]
+        
+        true_supports = Ed
+        true_weights = np.ones_like(Ed) / len(Ed)
+        
+        P = np.eye(n) - Z@Z.T
+        deflated_matrix = P @ data @ P.T
+        
+        ell = 15
+        N_hutch = 4
+        tau = hutchMomentEstimator(deflated_matrix, N_hutch, ell, G=None)
+        tau = (1 / (n-2)) * (n*tau - 2 * normalizedChebyPolyFixedPoint(0, len(tau)))
+        
+        supports, weights = approxChebMomentMatching(tau, cheb_vals=15000)
+        mask = (np.abs(supports) < 1).astype(int)
+        q2_supports = supports * mask
+        q2_weights = weights * mask
+        
+        plt.plot(true_supports, true_weights, color="blue", label="true")
+        plt.plot(q2_supports, q2_weights, color="red", label="CMM-corrected")
+        plt.xlabel("supports")
+        plt.ylabel("weights")
+        plt.ylim([-0.01, 0.1])
+        plt.legend()
+        error = sp.stats.wasserstein_distance(true_supports, q2_supports, true_weights, q2_weights)
+        plt.title("Wasserstein error:"+ str(error))
+        plt.savefig("figures/unittests/checking_CMM_deflated.pdf", bbox_inches="tight", dpi=200)
+        return None
+        
 
 if __name__ == '__main__':
-    mults = [25] #[5,10,15,20,25]
-    dataset_names = "uniform" # "all"
-    methods = ["SLQMM", "CMM", "KPM", "VRSLQMM-c12", "BKSDE-CMM", "BKSDE-KPM"]# ["SLQMM", "CMM", "KPM", "VRSLQMM-c1", "VRSLQMM-c2", "VRSLQMM-c12"]
-    loadresults = [True, True, False, True, True, True]
-    for i in mults:
-        TestCalculations().runSDEexperiments(i, dataset_names, methods, loadresults)
-    # TestCalculations().checkKrlovCorrectness()
+    # mults = [25] #[5,10,15,20,25]
+    # dataset_names = "uniform" # "all"
+    # methods = ["SLQMM", "CMM", "KPM", "VRSLQMM-c12", "BKSDE-CMM", "BKSDE-KPM"]# ["SLQMM", "CMM", "KPM", "VRSLQMM-c1", "VRSLQMM-c2", "VRSLQMM-c12"]
+    # loadresults = [True, True, False, True, True, True]
+    # for i in mults:
+    #     TestCalculations().runSDEexperiments(i, dataset_names, methods, loadresults)
+    TestCalculations().check_deflation()

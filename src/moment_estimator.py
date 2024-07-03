@@ -84,9 +84,8 @@ def discretizedJacksonDampedKPM(tau):
     """
     N = len(tau)
     tau = np.insert(tau, 0, 1/np.sqrt(np.pi))
-    # b = jacksonDampingCoefficients(N)
-    # b = b / b[0]
     b = jacksonDampingCoefficients(N)
+    b = b / b[0]
     # set the following for discretization
     d = 10000 
     xs = -1.0 + (2*np.array(list(range(1,d+1)), dtype=tau.dtype) / d)
@@ -193,7 +192,7 @@ def bkde(A, k, iters, seed=0, MM="cheb", cheb_vals=1000, G = None):
     n = len(A)
     
     # parameters
-    r, N_hutch = k//4, 3*k//4
+    r, N_hutch = 3*k//8, 2*k//8
     
     # get Q from block krylov
     Q = bki(A, r, iters) # matvecs= iters x k
@@ -202,14 +201,16 @@ def bkde(A, k, iters, seed=0, MM="cheb", cheb_vals=1000, G = None):
     T = Q.T @ A @ Q
     Lambda, Vectors = np.linalg.eig(T)
     S = []
-    constraint = 1e-6
+    constraint = 1e-10
     convergence_vals = np.zeros(Q.shape[1])
     for j in range(r):
         QV = Q @ Vectors[:,j]
         # matvecs is free since K is constructed and columns of Q spans the columns of K
-        convergence_vals[j] = np.linalg.norm((A @ QV) - (Lambda[j]*QV), ord=2)
+        convergence_vals[j] = np.linalg.norm(A @ QV - Lambda[j]*QV)
+        
         if convergence_vals[j] <= constraint:
             S.append(j)
+    # print(r, iters, len(S), convergence_vals[j])
     # plot the convergence
     fig_here = plt.figure()
     ax_here = fig_here.add_subplot()
@@ -232,6 +233,8 @@ def bkde(A, k, iters, seed=0, MM="cheb", cheb_vals=1000, G = None):
     # approximate moments
     # ell can be very small, so ell*k matvecs
     ell = iters
+    deflated_matrix = (P.T @ A @ P)/L
+    deflated_matrix = (deflated_matrix + deflated_matrix.T) / 2 # symmetrizing for good measure
     tau = hutchMomentEstimator((P.T @ A @ P)/L, N_hutch, ell, G=G)
     tau = (1 / (n-len(S))) * (n*tau - len(S) * normalizedChebyPolyFixedPoint(0, len(tau)))
     
@@ -239,6 +242,7 @@ def bkde(A, k, iters, seed=0, MM="cheb", cheb_vals=1000, G = None):
         supports, weights = approxChebMomentMatching(tau, cheb_vals=cheb_vals)
     else:
         supports, weights = discretizedJacksonDampedKPM(tau)
+    # print(supports, weights)
     
     # filtering
     mask = (np.abs(supports) < L).astype(int)
@@ -247,6 +251,7 @@ def bkde(A, k, iters, seed=0, MM="cheb", cheb_vals=1000, G = None):
     
     q1_weights = (len(S) / n) * q1_weights
     q2_weights = ((n-len(S)) / n) * q2_weights
+    # print(q2_supports, q2_weights)
     
     q_weights = np.hstack((q1_weights, q2_weights))
     q_supports = np.hstack((q1_supports, q2_supports))

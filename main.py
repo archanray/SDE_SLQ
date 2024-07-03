@@ -59,7 +59,7 @@ def main(random_restarts=5, dataset_names = "all", methods = ["all"], loadresult
                 errors_mean, errors_lo, errors_hi = pickle.load(file_)
                 file_.close()
             else:
-                errors_mean, errors_lo, errors_hi = checkSDEApproxError(data, moments, support_true, method=methods[i], cheb_vals=10000, random_restarts=random_restarts,variation=variation)
+                errors_mean, errors_lo, errors_hi = checkSDEApproxError(data, moments, support_true, method=methods[i], cheb_vals=15000, random_restarts=random_restarts,variation=variation)
                 # save results to filename
                 file_ = open(filename, "wb")
                 pickle.dump([errors_mean, errors_lo, errors_hi], file_)
@@ -85,23 +85,23 @@ def main(random_restarts=5, dataset_names = "all", methods = ["all"], loadresult
         # plt.clf()
         # plt.close()
         
-        # # save legend in a a separate file
-        # plt.gcf().clf()
-        # fig_legend = plt.figure()
-        # leg = fig_legend.legend(handles, labels, ncol=4)
-        # leg_lines = leg.get_lines()
-        # plt.setp(leg_lines, linewidth=2)
-        # fig_legend.savefig("figures/unittests/SDE_approximation_errors/"+str(random_restarts)+"/legend.pdf", bbox_inches='tight')
-        # plt.gcf().clf()
+        # save legend in a a separate file
+        plt.gcf().clf()
+        fig_legend = plt.figure()
+        leg = fig_legend.legend(handles, labels, ncol=4)
+        leg_lines = leg.get_lines()
+        plt.setp(leg_lines, linewidth=2)
+        fig_legend.savefig("figures/unittests/SDE_approximation_errors/"+str(random_restarts)+"_"+variation+"/"+"legend.pdf", bbox_inches='tight')
+        plt.gcf().clf()
     return None
 
 if __name__ == "__main__":
     val = int(sys.argv[1])
     var = sys.argv[2]
     mults = [val]
-    dataset_names = "low_rank_matrix"
-    methods = ["SLQMM", "CMM", "KPM", "VRSLQMM-c12", "BKSDE-CMM", "BKSDE-KPM"]# ["SLQMM", "CMM", "KPM", "VRSLQMM-c1", "VRSLQMM-c2", "VRSLQMM-c12"]
-    loadresults = [False, False, False, False, False, False]
+    dataset_names = "power_law_spectrum"
+    methods = ["CMM", "BKSDE-CMM"]# ["SLQMM", "CMM", "KPM", "VRSLQMM-c12", "BKSDE-CMM", "BKSDE-KPM"]# ["SLQMM", "CMM", "KPM", "VRSLQMM-c1", "VRSLQMM-c2", "VRSLQMM-c12"]
+    loadresults = [False, False]#[True, True, True, True, False, True]
     for mult in mults:
         print("###################### random restarts:", mult)
         main(mult, dataset_names, methods, loadresults, variation=var)

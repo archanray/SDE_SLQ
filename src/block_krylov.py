@@ -21,13 +21,13 @@ def bki(A, k=1, q=10):
     Pi = np.random.normal(0, 1/np.sqrt(k), (d, k))
     Pi = Pi / np.linalg.norm(Pi, axis=0)
 
-    APi = np.dot(A, Pi)
+    APi = A @ Pi
     APi, R = np.linalg.qr(APi)
     K = deepcopy(APi)
 
     # generating the Krylov Subspace
     for i in range(1,q+1):
-        APi = np.dot(A, np.dot(A.T, APi))
+        APi = A @ (A.T @ APi)
         APi, R = np.linalg.qr(APi)
         K = np.concatenate((K, APi), axis = 1)
 
@@ -35,4 +35,4 @@ def bki(A, k=1, q=10):
     Q, R = np.linalg.qr(K)
 
     # return first k columns of Q
-    return Q[:, list(range(k))]
+    return Q

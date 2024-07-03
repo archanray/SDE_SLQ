@@ -29,7 +29,20 @@ def get_data(name, load=True):
             dataset = np.load(f)
         dataset_size = len(dataset)
         dataset /= np.linalg.norm(dataset, ord=2)
+        return dataset, dataset_size
     else:
+        if name == "deflated_low_rank":
+            name_here = "low_rank_matrix"
+            file_path = os.path.join("matrices", name_here+".npy")
+            with open(file_path, "rb") as f:
+                dataset = np.load(f)
+            dataset_size = len(dataset)
+            dataset /= np.linalg.norm(dataset, ord=2)
+            E, L = np.linalg.eig(dataset)
+            P = np.eye(len(dataset)) - L[:,0:2]@L[:,0:2].T
+            dataset = P @ dataset @ P.T 
+            dataset /= np.linalg.norm(dataset, ord=2)
+            return dataset, dataset_size
         if name == "random":
             """
             symmetric matrix with random entries
@@ -112,12 +125,12 @@ def get_data(name, load=True):
         
         if name == "small_large_diagonal" or name == "low_rank_matrix":
             n = 1000
-            p = 100
+            p = 10
             if name == "small_large_diagonal":
                 small_vals = np.sort(np.random.randn(n-p) / 1e+10)
             if name == "low_rank_matrix":
                 small_vals = np.zeros(n-p)
-            large_vals = np.sort(100*np.random.randn(p))
+            large_vals = np.sort(np.random.randn(p))
             diagonal = np.concatenate((large_vals, small_vals))
             data = np.diag(diagonal)
             data /= np.linalg.norm(data, ord=2)
