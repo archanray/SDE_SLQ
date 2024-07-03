@@ -84,15 +84,40 @@ def Wasserstein(D1, D2):
     distance = distFun(keys1, keys2, values1, values2)
     return distance
 
-def jacksonDampingCoefficients(N):
+def jacksonDampingCoefficientsConv(N):
     """
-    requires N to be a multiple of N for the output to be of size N
+    compute jackson damping polynomial as in https://arxiv.org/pdf/2104.03461 using convolutions
     """
     z = int(np.ceil(N/4))
     g = np.ones(2*z+1)
     c = np.convolve(np.convolve(g, g), np.convolve(g, g))
     b = c[N:2*N+2]
     return b
+
+def jacksonDampingCoefficients(N):
+    """
+    compute jackson damping polynomial as in https://arxiv.org/pdf/2104.03461
+    """
+    bkN = np.zeros(N+1)
+    for k in range(N+1):
+        js = N/2 + 1 - np.abs(np.arange(-N/2-1, N/2+1-k+1))
+        jplusk = N/2 + 1 - np.abs(np.arange(-N/2-1, N/2+1-k+1) + k)
+        bkN[k] = np.dot(js, jplusk)
+    return bkN
+
+def altJackson(N):
+    """
+    https://arxiv.org/pdf/1308.5467 appendix A for jackson polynomials
+    """
+    ks = np.arange(0, N+1)
+    alphaM = np.pi / (N+2)
+    sin = np.sin(alphaM)
+    cos = np.cos(alphaM)
+    coses = np.cos(alphaM*ks)
+    sines = np.sin(alphaM*ks)
+    gkN = ((1-(ks/(N+2)))* sin * coses) + ((1/(N+2))*cos*sines)
+    gkN /= sin
+    return gkN
 
 def jackson_poly_coeffs(deg):
     """

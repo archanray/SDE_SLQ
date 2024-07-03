@@ -36,8 +36,8 @@ def main(random_restarts=5, dataset_names = "all", methods = ["all"], loadresult
         else:
             support_true = np.real(np.linalg.eigvals(data))
             np.save(eigs_file, support_true)
-        # set up moments
-        moments = np.arange(8,120,8, dtype=int)
+        # set up moments ###################################### MOMENT VALS
+        moments = np.arange(4,60,4, dtype=int)
         
         foldername = "outputs/"+dataset+"/"+str(random_restarts)+"_"+variation+"/"
         if not os.path.isdir(foldername):
@@ -99,8 +99,7 @@ if __name__ == "__main__":
     val = int(sys.argv[1])
     var = sys.argv[2]
     mults = [val]
-    print(var)
-    dataset_names = "all"
+    dataset_names = "low_rank_matrix"
     methods = ["SLQMM", "CMM", "KPM", "VRSLQMM-c12", "BKSDE-CMM", "BKSDE-KPM"]# ["SLQMM", "CMM", "KPM", "VRSLQMM-c1", "VRSLQMM-c2", "VRSLQMM-c12"]
     loadresults = [False, False, False, False, False, False]
     for mult in mults:

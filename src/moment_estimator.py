@@ -1,6 +1,6 @@
 import numpy as np
 from copy import deepcopy
-from src.utils import normalizedChebyPolyFixedPoint, jacksonDampingCoefficients, jackson_poly_coeffs, sortEigValues, aggregator
+from src.utils import normalizedChebyPolyFixedPoint, jacksonDampingCoefficients, jackson_poly_coeffs, sortEigValues, aggregator, altJackson
 from src.optimizers import L1Solver
 from src.optimizers import cvxpyL1Solver
 from src.optimizers import pgdSolver
@@ -11,6 +11,7 @@ import src.pgd as pgd
 from src.lanczos import CTU_lanczos
 from src.distribution import Distribution, mergeDistributions
 from src.block_krylov import bki
+import matplotlib.pyplot as plt
 
 def adder(l):
     def valCal(v1, v2):
@@ -83,8 +84,9 @@ def discretizedJacksonDampedKPM(tau):
     """
     N = len(tau)
     tau = np.insert(tau, 0, 1/np.sqrt(np.pi))
+    # b = jacksonDampingCoefficients(N)
+    # b = b / b[0]
     b = jacksonDampingCoefficients(N)
-    b = b / b[0]
     # set the following for discretization
     d = 10000 
     xs = -1.0 + (2*np.array(list(range(1,d+1)), dtype=tau.dtype) / d)
@@ -187,11 +189,11 @@ def bkde(A, k, iters, seed=0, MM="cheb", cheb_vals=1000, G = None):
     k: block-size in krylov
     iters: block krylov iters & hutch random vecs
     """
-    np.random.seed(seed)
+    # np.random.seed(seed)
     n = len(A)
     
     # parameters
-    r = k//4 # since Q will be of size n x k
+    r, N_hutch = k//4, 3*k//4
     
     # get Q from block krylov
     Q = bki(A, r, iters) # matvecs= iters x k
@@ -200,17 +202,25 @@ def bkde(A, k, iters, seed=0, MM="cheb", cheb_vals=1000, G = None):
     T = Q.T @ A @ Q
     Lambda, Vectors = np.linalg.eig(T)
     S = []
-    constraint = 1e-6
+    constraint = 10000
+    convergence_vals = np.zeros(Q.shape[1])
     for j in range(r):
         QV = Q @ Vectors[:,j]
         # matvecs is free since K is constructed and columns of Q spans the columns of K
-        if np.linalg.norm((A @ QV) - (Lambda[j]*QV), ord=2) <= constraint:
+        convergence_vals[j] = np.linalg.norm((A @ QV) - (Lambda[j]*QV), ord=2)
+        if convergence_vals[j] <= constraint:
             S.append(j)
+    # plot the convergence
+    fig_here = plt.figure()
+    ax_here = fig_here.add_subplot()
+    ax_here.plot(convergence_vals)
+    fig_here.savefig("figures/unittests/BKDE_convergence_vals_"+str(r)+".pdf", bbox_inches="tight", dpi=200)
+    plt.close(fig_here)
     
     # store converged Q and lambdas
     Z = Q @ Vectors[:, S]
     LsubS = Lambda[S]
-    
+
     # set up q_1
     q1_supports = LsubS
     q1_weights = np.ones_like(LsubS) / len(LsubS)
@@ -222,7 +232,6 @@ def bkde(A, k, iters, seed=0, MM="cheb", cheb_vals=1000, G = None):
     # approximate moments
     # ell can be very small, so ell*k matvecs
     ell = iters
-    N_hutch = 3*k//2
     tau = hutchMomentEstimator((P.T @ A @ P)/L, N_hutch, ell, G=G)
     tau = (1 / (n-len(S))) * (n*tau - len(S) * normalizedChebyPolyFixedPoint(0, len(tau)))
     
