@@ -126,7 +126,7 @@ if __name__ == "__main__":
     mults = [val]
     dataset_names = "gaussian"
     methods = ["SLQMM", "CMM", "KPM", "VRSLQMM-c12", "BKSDE-CMM", "BKSDE-KPM"] # ["SLQMM", "CMM", "KPM", "VRSLQMM-c12", "BKSDE-CMM", "BKSDE-KPM"]
-    loadresults = [True, True, True, True, True, True] # [True, True, True, True, False, True]
+    loadresults = [True, True, True, True, False, True] # [True, True, True, True, False, True]
     for mult in mults:
         print("###################### random restarts:", mult)
         main(mult, dataset_names, methods, loadresults, variation=var)

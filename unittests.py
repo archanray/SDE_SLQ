@@ -482,6 +482,38 @@ class TestCalculations:
         plt.savefig("figures/unittests/block_krylov/approx_eigvals_gaussian.pdf", bbox_inches='tight', dpi=200)
         return None
     
+    def checkKrylovLInf(self):
+        dataset = "gaussian"
+        data, n = get_data(dataset)
+        true_supports = np.linalg.eigvals(data)
+        true_supports = np.sort(true_supports)
+        true_weights = np.ones_like(true_supports) / len(true_supports)
+        k = 15
+        block_size = np.arange(8,60,4)
+        trials = 5
+        ell_infty_error = np.zeros((5, len(block_size)))
+        Wasserstein = np.zeros((5, len(block_size)))
+        for t in range(trials):
+            for i in range(len(block_size)):
+                block = block_size[i]
+                Q = bki(data, k=block, q=k, QR=False)
+                Lambdas = np.linalg.eigvals(Q.T @ data @ Q)
+                # Lambdas = np.linalg.eigvals((data @ Q @ Q.T + Q @ Q.T @ data)/2)
+                # print(n, len(Lambdas))
+                Lambdas = np.pad(Lambdas, (0, n-len(Lambdas)), 'constant')
+                Lambdas = np.sort(Lambdas)
+                ell_infty_error[t,i] = np.max(np.abs(true_supports - Lambdas))
+                Wasserstein[t,i] = sp.stats.wasserstein_distance(true_supports, Lambdas, true_weights, np.ones_like(Lambdas) / len(Lambdas))
+        
+        plt.plot(block_size, np.mean(ell_infty_error, axis=0), label="ell_infty")
+        plt.plot(block_size, np.mean(Wasserstein, axis=0), label="wasserstein")
+        plt.xlabel("block size")
+        plt.ylabel("errors")
+        plt.legend()
+        plt.savefig("figures/unittests/block_krylov/ell_infty_varied_block.pdf", bbox_inches="tight", dpi=200)
+        
+        return None
+    
     def check_deflation(self):
         dataset = "gaussian"
         data, n = get_data(dataset)
@@ -527,4 +559,4 @@ if __name__ == '__main__':
     # loadresults = [True, True, False, True, True, True]
     # for i in mults:
     #     TestCalculations().runSDEexperiments(i, dataset_names, methods, loadresults)
-    TestCalculations().checkKrlovCorrectness()
+    TestCalculations().checkKrylovLInf()

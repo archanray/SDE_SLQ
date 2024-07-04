@@ -1,7 +1,7 @@
 import numpy as np
 from copy import deepcopy
 
-def bki(A, k=1, q=10):
+def bki(A, k=1, q=10, QR=True):
     """
     implements block krylov iterative
     
@@ -22,13 +22,15 @@ def bki(A, k=1, q=10):
     Pi = Pi / np.linalg.norm(Pi, axis=0)
 
     APi = A @ Pi
-    APi, R = np.linalg.qr(APi)
+    if QR:
+        APi, R = np.linalg.qr(APi)
     K = deepcopy(APi)
 
     # generating the Krylov Subspace
     for i in range(1,q+1):
         APi = A @ (A.T @ APi)
-        APi, R = np.linalg.qr(APi)
+        if QR:
+            APi, R = np.linalg.qr(APi)
         K = np.concatenate((K, APi), axis = 1)
 
     # orthonormalizing columns of K
