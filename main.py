@@ -5,8 +5,25 @@ from src.get_dataset import get_data
 from src.utils import get_spectrum, saver
 from src.approx_wrapper import checkSDEApproxError
 import matplotlib.pyplot as plt
+import matplotlib
+
+def map_name(name):
+    if name == "gaussian":
+        return "Gaussian matrix"
+    if name == "low_rank_matrix":
+        return "Low-rank matrix"
+    if name == "power_law_spectrum":
+        return "Power law spectrum matrix"
+    if name == "uniform":
+        return "Uniform matrix"
+    if name == "inverse_spectrum":
+        return "Inverse spectrum matrix"
+    if name == "erdos992":
+        return "Erdos992 adjacency matrix"
+    return None
 
 def main(random_restarts=5, dataset_names = "all", methods = ["all"], loadresults = [True, True, True, True, True, True], variation="fixed"):
+    matplotlib.rcParams.update({'font.size': 16})
     # colors chosen from https://matplotlib.org/stable/gallery/color/named_colors.html
     colors = ["red", "dodgerblue", "black", "darkorchid", "#D2691E", "#40E0D0"]
     if dataset_names == "all":
@@ -24,7 +41,7 @@ def main(random_restarts=5, dataset_names = "all", methods = ["all"], loadresult
         print("running for dataset:", dataset)
         print("random restarts:", random_restarts)
         # dataset = "hypercube"
-        load_mat_flag = False
+        load_mat_flag = True
         data, n = get_data(dataset, load=load_mat_flag)
         print(np.linalg.norm(data, ord=2))
         eigs_folder = "outputs/"+dataset+"/"+"_"+variation+"/"
@@ -59,7 +76,7 @@ def main(random_restarts=5, dataset_names = "all", methods = ["all"], loadresult
                 errors_mean, errors_lo, errors_hi = pickle.load(file_)
                 file_.close()
             else:
-                errors_mean, errors_lo, errors_hi = checkSDEApproxError(data, moments, support_true, method=methods[i], cheb_vals=15000, random_restarts=random_restarts,variation=variation)
+                errors_mean, errors_lo, errors_hi = checkSDEApproxError(data, moments, support_true, method=methods[i], cheb_vals=20000, random_restarts=random_restarts,variation=variation)
                 # save results to filename
                 file_ = open(filename, "wb")
                 pickle.dump([errors_mean, errors_lo, errors_hi], file_)
@@ -76,9 +93,10 @@ def main(random_restarts=5, dataset_names = "all", methods = ["all"], loadresult
         handles,labels = ax.get_legend_handles_labels()
         plt.ylabel("Wasserstein error")
         plt.yscale("log")
-        plt.xlabel("Total matric-vector queries")
+        plt.xlabel("Total matrix-vector queries")
         plt.yticks([10**0, 10**(-1), 10**(-2), 10**(-3)])
         plt.grid()
+        plt.title(map_name(dataset))
         if not os.path.isdir("figures/unittests/SDE_approximation_errors/"+str(random_restarts)+"_"+variation+"/"):
             os.makedirs("figures/unittests/SDE_approximation_errors/"+str(random_restarts)+"_"+variation+"/")
         plt.savefig("figures/unittests/SDE_approximation_errors/"+str(random_restarts)+"_"+variation+"/"+dataset+".pdf", bbox_inches='tight', dpi=200)
@@ -96,12 +114,19 @@ def main(random_restarts=5, dataset_names = "all", methods = ["all"], loadresult
     return None
 
 if __name__ == "__main__":
-    val = int(sys.argv[1])
-    var = sys.argv[2]
+    try:
+        val = int(sys.argv[1])
+    except:
+        val = 15
+    try:
+        var = sys.argv[2]
+    except:
+        var = "fixed"
+         
     mults = [val]
-    dataset_names = "power_law_spectrum"
-    methods = ["CMM", "BKSDE-CMM"]# ["SLQMM", "CMM", "KPM", "VRSLQMM-c12", "BKSDE-CMM", "BKSDE-KPM"]# ["SLQMM", "CMM", "KPM", "VRSLQMM-c1", "VRSLQMM-c2", "VRSLQMM-c12"]
-    loadresults = [False, False]#[True, True, True, True, False, True]
+    dataset_names = "gaussian"
+    methods = ["SLQMM", "CMM", "KPM", "VRSLQMM-c12", "BKSDE-CMM", "BKSDE-KPM"] # ["SLQMM", "CMM", "KPM", "VRSLQMM-c12", "BKSDE-CMM", "BKSDE-KPM"]
+    loadresults = [True, True, True, True, True, True] # [True, True, True, True, False, True]
     for mult in mults:
         print("###################### random restarts:", mult)
         main(mult, dataset_names, methods, loadresults, variation=var)

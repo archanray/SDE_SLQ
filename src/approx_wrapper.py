@@ -22,7 +22,7 @@ def sdeComputer(data, degree, method = "CMM", cheb_vals=None, submethod="cvxpy",
     if method == "VRSLQMM-c2":
         return VRSLQMM(data, degree, random_restarts, constraints="2", V=rand_vects)
     if method == "BKSDE-CMM":
-        return bkde(data, degree, random_restarts, MM="cheb", cheb_vals=cheb_vals)
+        return bkde(data, degree, random_restarts, MM="CMM", cheb_vals=cheb_vals)
     if method == "BKSDE-KPM":
         return bkde(data, degree, random_restarts, MM="KPM")
     return None

@@ -444,16 +444,16 @@ class TestCalculations:
         data, n = get_data(dataset)
         print(np.linalg.norm(data, ord=2))
         k = 15
-        block_size = np.arange(8,60,4) // 2
+        block_size = np.arange(8,60,4) // 4
         trials = 5
         check_ranks = [0,1,2,3]
         errors = np.zeros((trials, len(block_size)))
         for check_rank in check_ranks:
-            print(check_rank)
+            # print(check_rank)
             for t in tqdm(range(trials)):
                 for i in range(len(block_size)):
                     Q = bki(data, block_size[i], k)
-                    print(k, Q.shape)
+                    # print(k, Q.shape)
                     T = Q.T @ data @ Q
                     Lambdas, Vectors = np.linalg.eig(T)
                     Qv = Q @ Vectors[:,check_rank]
@@ -469,10 +469,21 @@ class TestCalculations:
             plt.savefig("figures/unittests/block_krylov/test_error_"+str(check_rank)+".pdf", bbox_inches='tight', dpi=200)
             plt.clf()
             plt.close()
+        
+        Q = bki(data, block_size[i], k)
+        T = Q.T @ data @ Q
+        Lambdas, Vectors = np.linalg.eig(T)
+        true_Lambdas, _ = np.linalg.eig(data)
+        plt.plot(range(len(Lambdas)), np.sort(Lambdas), label="krylov")
+        plt.plot(range(len(true_Lambdas)), np.sort(true_Lambdas), label="true")
+        plt.xlabel("eigenvalue ID")
+        plt.ylabel("eigenvalues")
+        plt.legend()
+        plt.savefig("figures/unittests/block_krylov/approx_eigvals_gaussian.pdf", bbox_inches='tight', dpi=200)
         return None
     
     def check_deflation(self):
-        dataset = "low_rank_matrix"
+        dataset = "gaussian"
         data, n = get_data(dataset)
         
         E, L = np.linalg.eig(data)
@@ -516,4 +527,4 @@ if __name__ == '__main__':
     # loadresults = [True, True, False, True, True, True]
     # for i in mults:
     #     TestCalculations().runSDEexperiments(i, dataset_names, methods, loadresults)
-    TestCalculations().check_deflation()
+    TestCalculations().checkKrlovCorrectness()

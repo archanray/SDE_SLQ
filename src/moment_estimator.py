@@ -12,6 +12,7 @@ from src.lanczos import CTU_lanczos
 from src.distribution import Distribution, mergeDistributions
 from src.block_krylov import bki
 import matplotlib.pyplot as plt
+import sys
 
 def adder(l):
     def valCal(v1, v2):
@@ -192,25 +193,24 @@ def bkde(A, k, iters, seed=0, MM="cheb", cheb_vals=1000, G = None):
     n = len(A)
     
     # parameters
-    r, N_hutch = 3*k//8, 2*k//8
+    r, N_hutch = 4*k//8, 2*k//8
     
     # get Q from block krylov
-    Q = bki(A, r, iters) # matvecs= iters x k
-    # print(Q.shape, k//2)
+    Q = bki(A, r, iters) # matvecs= 2*iters x k
     # matvecs here is free since K is already computed
     T = Q.T @ A @ Q
     Lambda, Vectors = np.linalg.eig(T)
     S = []
     constraint = 1e-10
     convergence_vals = np.zeros(Q.shape[1])
-    for j in range(r):
+    rdash = Q.shape[1]
+    for j in range(rdash):
         QV = Q @ Vectors[:,j]
         # matvecs is free since K is constructed and columns of Q spans the columns of K
         convergence_vals[j] = np.linalg.norm(A @ QV - Lambda[j]*QV)
-        
         if convergence_vals[j] <= constraint:
             S.append(j)
-    # print(r, iters, len(S), convergence_vals[j])
+    # print(r, iters, len(S))
     # plot the convergence
     fig_here = plt.figure()
     ax_here = fig_here.add_subplot()
@@ -235,13 +235,17 @@ def bkde(A, k, iters, seed=0, MM="cheb", cheb_vals=1000, G = None):
     ell = iters
     deflated_matrix = (P.T @ A @ P)/L
     deflated_matrix = (deflated_matrix + deflated_matrix.T) / 2 # symmetrizing for good measure
-    tau = hutchMomentEstimator((P.T @ A @ P)/L, N_hutch, ell, G=G)
+    L = np.linalg.norm(deflated_matrix, ord=2)
+    tau = hutchMomentEstimator(deflated_matrix/L, N_hutch, ell, G=None)
     tau = (1 / (n-len(S))) * (n*tau - len(S) * normalizedChebyPolyFixedPoint(0, len(tau)))
     
-    if MM == "cheb":
+    if MM == "CMM":
         supports, weights = approxChebMomentMatching(tau, cheb_vals=cheb_vals)
-    else:
+    elif MM == "KPM":
         supports, weights = discretizedJacksonDampedKPM(tau)
+    else:
+        print("incorrect moment matching algorithm selected")
+        sys.exit(1)
     # print(supports, weights)
     
     # filtering
@@ -258,4 +262,4 @@ def bkde(A, k, iters, seed=0, MM="cheb", cheb_vals=1000, G = None):
     
     q_supports, q_weights = aggregator(q_supports, q_weights)
     
-    return q_supports, q_weights
+    return q1_supports, q1_weights
