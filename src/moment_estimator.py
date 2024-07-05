@@ -131,7 +131,7 @@ def SLQMM(data, nv, k, V = None):
 def VRSLQMM(data, m, k, constraints="12", V=None):
     # assumption:
     # 1. l = nv/4
-    l = int(m/10)
+    l = int(m/6)
     n = len(data)
     if V is None:
         V = np.random.randn(n,k)
@@ -151,11 +151,11 @@ def VRSLQMM(data, m, k, constraints="12", V=None):
         for j in range(l):
             QV = Q @ Vectors[:,j]
             if "1" in constraints:
-                constraint1 = np.linalg.norm(data @ QV - Lambda[j]*QV) <= 25/(n**2)
+                constraint1 = np.linalg.norm(data @ QV - Lambda[j]*QV) <= 1/(n**2)
             else:
                 constraint1 = True
             if "2" in constraints:
-                constraint2 = Vectors[0,j]**2 <= 5/n
+                constraint2 = Vectors[0,j]**2 <= 1/n
             else:
                 constraint2 = True
             if constraint1 and constraint2:
@@ -193,10 +193,11 @@ def bkde(A, k, iters, seed=0, MM="cheb", cheb_vals=1000, G = None):
     n = len(A)
     
     # parameters
-    r, N_hutch = 4*k//8, 2*k//8
+    r = 2*k//8
+    N_hutch = max(k - 2*r,0)
     
     # get Q from block krylov
-    Q = bki(A, r, iters) # matvecs= 2*iters x k
+    Q = bki(A, r, iters, QR=False) # matvecs= 2*iters x k
     # matvecs here is free since K is already computed
     T = Q.T @ A @ Q
     Lambda, Vectors = np.linalg.eig(T)
@@ -210,13 +211,14 @@ def bkde(A, k, iters, seed=0, MM="cheb", cheb_vals=1000, G = None):
         convergence_vals[j] = np.linalg.norm(A @ QV - Lambda[j]*QV)
         if convergence_vals[j] <= constraint:
             S.append(j)
+    # print(S)
     # print(r, iters, len(S))
     # plot the convergence
-    fig_here = plt.figure()
-    ax_here = fig_here.add_subplot()
-    ax_here.plot(convergence_vals)
-    fig_here.savefig("figures/unittests/BKDE_convergence_vals_"+str(r)+".pdf", bbox_inches="tight", dpi=200)
-    plt.close(fig_here)
+    # fig_here = plt.figure()
+    # ax_here = fig_here.add_subplot()
+    # ax_here.plot(convergence_vals)
+    # fig_here.savefig("figures/unittests/BKDE_convergence_vals_"+str(r)+".pdf", bbox_inches="tight", dpi=200)
+    # plt.close(fig_here)
     
     # store converged Q and lambdas
     Z = Q @ Vectors[:, S]
@@ -233,14 +235,15 @@ def bkde(A, k, iters, seed=0, MM="cheb", cheb_vals=1000, G = None):
     # approximate moments
     # ell can be very small, so ell*k matvecs
     ell = iters
+    N_hutch = k
     deflated_matrix = (P.T @ A @ P)/L
-    deflated_matrix = (deflated_matrix + deflated_matrix.T) / 2 # symmetrizing for good measure
-    L = np.linalg.norm(deflated_matrix, ord=2)
-    tau = hutchMomentEstimator(deflated_matrix/L, N_hutch, ell, G=None)
+    # deflated_matrix = (deflated_matrix + deflated_matrix.T) / 2 # symmetrizing for good measure
+    # L = np.linalg.norm(deflated_matrix, ord=2)
+    tau = hutchMomentEstimator(deflated_matrix, N_hutch, ell, G=G)
     tau = (1 / (n-len(S))) * (n*tau - len(S) * normalizedChebyPolyFixedPoint(0, len(tau)))
     
     if MM == "CMM":
-        supports, weights = approxChebMomentMatching(tau, cheb_vals=cheb_vals)
+        supports, weights = approxChebMomentMatching(tau, cheb_vals=cheb_vals, method="cvxpy")
     elif MM == "KPM":
         supports, weights = discretizedJacksonDampedKPM(tau)
     else:
@@ -262,4 +265,4 @@ def bkde(A, k, iters, seed=0, MM="cheb", cheb_vals=1000, G = None):
     
     q_supports, q_weights = aggregator(q_supports, q_weights)
     
-    return q1_supports, q1_weights
+    return q_supports, q_weights

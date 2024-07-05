@@ -489,14 +489,14 @@ class TestCalculations:
         true_supports = np.sort(true_supports)
         true_weights = np.ones_like(true_supports) / len(true_supports)
         k = 15
-        block_size = np.arange(8,60,4)
+        block_size = np.arange(16,120,4) // 2
         trials = 5
         ell_infty_error = np.zeros((5, len(block_size)))
         Wasserstein = np.zeros((5, len(block_size)))
         for t in range(trials):
             for i in range(len(block_size)):
                 block = block_size[i]
-                Q = bki(data, k=block, q=k, QR=False)
+                Q = bki(data, k=block, q=k, QR=True)
                 Lambdas = np.linalg.eigvals(Q.T @ data @ Q)
                 # Lambdas = np.linalg.eigvals((data @ Q @ Q.T + Q @ Q.T @ data)/2)
                 # print(n, len(Lambdas))
@@ -509,6 +509,8 @@ class TestCalculations:
         plt.plot(block_size, np.mean(Wasserstein, axis=0), label="wasserstein")
         plt.xlabel("block size")
         plt.ylabel("errors")
+        plt.yscale("log")
+        plt.yticks([10**0, 10**(-1), 10**(-2), 10**(-3)])
         plt.legend()
         plt.savefig("figures/unittests/block_krylov/ell_infty_varied_block.pdf", bbox_inches="tight", dpi=200)
         
