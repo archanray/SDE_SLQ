@@ -193,11 +193,11 @@ def bkde(A, k, iters, seed=0, MM="cheb", cheb_vals=1000, G = None):
     n = len(A)
     
     # parameters
-    r = 2*k//8
+    r = (2)*k//8
     N_hutch = max(k - 2*r,0)
     
     # get Q from block krylov
-    Q = bki(A, r, iters, QR=False) # matvecs= 2*iters x k
+    Q = bki(A, r, iters, QR=True) # matvecs= 2*iters x k
     # matvecs here is free since K is already computed
     T = Q.T @ A @ Q
     Lambda, Vectors = np.linalg.eig(T)
@@ -237,7 +237,7 @@ def bkde(A, k, iters, seed=0, MM="cheb", cheb_vals=1000, G = None):
     ell = iters
     N_hutch = k
     deflated_matrix = (P.T @ A @ P)/L
-    # deflated_matrix = (deflated_matrix + deflated_matrix.T) / 2 # symmetrizing for good measure
+    deflated_matrix = (deflated_matrix + deflated_matrix.T) / 2 # symmetrizing for good measure
     # L = np.linalg.norm(deflated_matrix, ord=2)
     tau = hutchMomentEstimator(deflated_matrix, N_hutch, ell, G=G)
     tau = (1 / (n-len(S))) * (n*tau - len(S) * normalizedChebyPolyFixedPoint(0, len(tau)))

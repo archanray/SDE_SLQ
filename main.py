@@ -43,7 +43,8 @@ def main(random_restarts=5, dataset_names = "all", methods = ["all"], loadresult
         # dataset = "hypercube"
         load_mat_flag = True
         data, n = get_data(dataset, load=load_mat_flag)
-        print(np.linalg.norm(data, ord=2))
+        if np.linalg.norm(data, ord=2) > 1:
+            data /= np.linalg.norm(data, ord=2)
         eigs_folder = "outputs/"+dataset+"/"+"_"+variation+"/"
         if not os.path.isdir(eigs_folder):
             os.makedirs(eigs_folder)
@@ -76,7 +77,7 @@ def main(random_restarts=5, dataset_names = "all", methods = ["all"], loadresult
                 errors_mean, errors_lo, errors_hi = pickle.load(file_)
                 file_.close()
             else:
-                errors_mean, errors_lo, errors_hi = checkSDEApproxError(data, moments, support_true, method=methods[i], cheb_vals=5000, random_restarts=random_restarts,variation=variation)
+                errors_mean, errors_lo, errors_hi = checkSDEApproxError(data, moments, support_true, method=methods[i], cheb_vals=15000, random_restarts=random_restarts,variation=variation)
                 # save results to filename
                 file_ = open(filename, "wb")
                 pickle.dump([errors_mean, errors_lo, errors_hi], file_)
@@ -84,7 +85,13 @@ def main(random_restarts=5, dataset_names = "all", methods = ["all"], loadresult
             
             # fixing name for VRSLQ
             if "VRSLQMM" in methods[i]:
-                methods[i] = "VRSLQMM"
+                methods[i] = "VR-SLQ"
+            if "BKSDE-CMM" in methods[i]:
+                methods[i] = "def-CMM"
+            if "BKSDE-KPM" in methods[i]:
+                methods[i] = "def-KPM"
+            if "SLQMM" in methods[i]:
+                methods[i] = "SLQ"
             # plot errors with low and high
             ax.plot(random_restarts*moments, errors_mean, label=methods[i], color=colors[i])
             ax.fill_between(random_restarts*moments, errors_lo, errors_hi, alpha=0.2, color=colors[i])
@@ -107,7 +114,7 @@ def main(random_restarts=5, dataset_names = "all", methods = ["all"], loadresult
         # save legend in a a separate file
         plt.gcf().clf()
         fig_legend = plt.figure()
-        leg = fig_legend.legend(handles, labels, ncol=4)
+        leg = fig_legend.legend(handles, labels, ncol=6)
         leg_lines = leg.get_lines()
         plt.setp(leg_lines, linewidth=2)
         fig_legend.savefig("figures/unittests/SDE_approximation_errors/"+str(random_restarts)+"_"+variation+"/"+"legend.pdf", bbox_inches='tight')
@@ -125,9 +132,9 @@ if __name__ == "__main__":
         var = "fixed"
     
     mults = [val]
-    dataset_names = "erdos992"
+    dataset_names = "gaussian"
     methods = ["SLQMM", "CMM", "KPM", "VRSLQMM-c12", "BKSDE-CMM", "BKSDE-KPM"] # ["SLQMM", "CMM", "KPM", "VRSLQMM-c12", "BKSDE-CMM", "BKSDE-KPM"]
-    loadresults = [True, True, True, True, False, True] # [True, True, True, True, False, True]
+    loadresults = [True, True, True, True, True, True] # [True, True, True, True, False, True]
     for mult in mults:
         print("###################### random restarts:", mult)
         main(mult, dataset_names, methods, loadresults, variation=var)
