@@ -193,7 +193,7 @@ def bkde(A, k, iters, seed=0, MM="cheb", cheb_vals=1000, G = None):
     n = len(A)
     
     # parameters
-    r = (2)*k//8
+    r = (4)*k//8
     N_hutch = max(k - 2*r,0)
     
     # get Q from block krylov

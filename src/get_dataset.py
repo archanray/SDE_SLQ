@@ -77,7 +77,7 @@ def get_data(name, load=True):
             """
             as described in https://arxiv.org/pdf/2104.03461.pdf
             """
-            n = 1000
+            n = 5000
             Lambda = np.random.normal(size=n)
             Lambda = Lambda / max(Lambda)
             V = ortho_group.rvs(n)
@@ -92,7 +92,7 @@ def get_data(name, load=True):
             """
             as described in https://arxiv.org/pdf/2104.03461.pdf
             """
-            n = 1000
+            n = 5000
             Lambda = np.random.uniform(low=-1.0, high=1.0, size=n)
             Lambda = Lambda / max(Lambda)
             V = ortho_group.rvs(n)
@@ -124,8 +124,8 @@ def get_data(name, load=True):
             return data, len(data)
         
         if name == "small_large_diagonal" or name == "low_rank_matrix":
-            n = 1000
-            p = 10
+            n = 5000
+            p = 100
             if name == "small_large_diagonal":
                 small_vals = np.sort(np.random.randn(n-p) / 1e+10)
             if name == "low_rank_matrix":
@@ -142,14 +142,20 @@ def get_data(name, load=True):
             return data, len(data)
         
         if name == "power_law_spectrum" or name == "inverse_spectrum" or name == "square_inverse_spectrum":
-            n = 1000
+            n = 5000
             if name == "power_law_spectrum":
-                divisors = np.geomspace(1.0, np.power(2,n-1, dtype=float), num=n)
+                q = 1000 # setting q too big leads to numerical overflow
+                divisors = np.geomspace(1.0, np.power(2,q-1, dtype=float), num=q)
             if name == "inverse_spectrum":
                 divisors = np.arange(1, n+1,1)
             if name == "square_inverse_spectrum":
                 divisors = np.arange(1, n+1,1)**2
-            diagonal = np.divide(np.ones(n), divisors)
+            if n > 1000 and name == "power_law_spectrum":
+                q = 1000
+                diagonal = np.zeros(n)
+                diagonal[:q] = np.divide(np.ones(q), divisors)
+            else:
+                diagonal = np.divide(np.ones(n), divisors)
             data = np.diag(diagonal)
             data /= np.linalg.norm(data, ord=2)
             with open(file_path, "wb") as f:
@@ -158,4 +164,5 @@ def get_data(name, load=True):
             
     return dataset, dataset_size
 
-# get_data(name="erdos992")
+# A, n = get_data(name="power_law_spectrum", load=False)
+# print(n, np.diag(A))

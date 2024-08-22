@@ -34,15 +34,16 @@ def main(random_restarts=5, dataset_names = "all", methods = ["all"], loadresult
         methods = ["SLQMM", "CMM", "KPM", "VRSLQMM-c1", "VRSLQMM-c2", "VRSLQMM-c12", "BKSDE-CMM", "BKSDE-KPM"]
     else:
         pass
-    if len(loadresults) != len(methods):
+    if len(loadresults)-1 != len(methods):
         print("loadresults should be of same size")
         sys.exit(1)        
     for dataset in ds:
         print("running for dataset:", dataset)
         print("random restarts:", random_restarts)
         # dataset = "hypercube"
-        load_mat_flag = True
+        load_mat_flag = loadresults[-1]
         data, n = get_data(dataset, load=load_mat_flag)
+        print("size of matrix:", n, data.shape)
         if np.linalg.norm(data, ord=2) > 1:
             data /= np.linalg.norm(data, ord=2)
         eigs_folder = "outputs/"+dataset+"/"+"_"+variation+"/"
@@ -132,9 +133,11 @@ if __name__ == "__main__":
         var = "fixed"
     
     mults = [val]
-    dataset_names = "gaussian"
+    dataset_names = "power_law_spectrum"
     methods = ["SLQMM", "CMM", "KPM", "VRSLQMM-c12", "BKSDE-CMM", "BKSDE-KPM"] # ["SLQMM", "CMM", "KPM", "VRSLQMM-c12", "BKSDE-CMM", "BKSDE-KPM"]
-    loadresults = [True, True, True, True, True, True] # [True, True, True, True, False, True]
+    loadresults = [False]*len(methods) + [False] # the last true is for the dataset
+    # loadresults[1] = False
+    # loadresults[4] = False
     for mult in mults:
         print("###################### random restarts:", mult)
         main(mult, dataset_names, methods, loadresults, variation=var)
